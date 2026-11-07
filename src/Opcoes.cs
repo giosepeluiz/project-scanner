@@ -1,0 +1,107 @@
+// Janela de opções: tema e cor de destaque
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Digitalizar
+{
+    class Opcoes : FormaModerna
+    {
+        readonly List<Opcao> temas = new List<Opcao>();
+        readonly List<Amostra> cores = new List<Amostra>();
+        static int S(int v) { return Tema.S(v); }
+
+        public Opcoes()
+        {
+            Text = "Opções";
+            Barra.Titulo = "Opções";
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.CenterParent;
+            Size = new Size(S(560), S(560));
+            MinimumSize = Size;
+
+            var corpo = new Panel { Dock = DockStyle.Fill, BackColor = Tema.BG, Padding = new Padding(S(24), S(8), S(24), S(16)) };
+            Controls.Add(corpo);
+            int y = S(8);
+
+            // ---- tema
+            corpo.Controls.Add(Titulo("Tema", y)); y += S(34);
+            var cartaoTema = new Panel { Left = S(24), Top = y, Width = S(496), Height = S(120), BackColor = Tema.CARD };
+            corpo.Controls.Add(cartaoTema);
+            string[,] opcoes = { { "claro", "Claro" }, { "escuro", "Escuro" }, { "sistema", "Usar o tema do Windows" } };
+            for (int i = 0; i < 3; i++)
+            {
+                string id = opcoes[i, 0];
+                var o = new Opcao(opcoes[i, 1]) { Left = S(16), Top = S(10) + i * S(34), Tag = id, Marcada = Tema.ModoTema == id };
+                o.Escolhida += (s, e) => { Tema.Definir(id, Tema.Destaque); Marcar(); };
+                cartaoTema.Controls.Add(o);
+                temas.Add(o);
+            }
+            y += cartaoTema.Height + S(24);
+
+            // ---- cor de destaque
+            corpo.Controls.Add(Titulo("Cor de destaque", y)); y += S(34);
+            var cartaoCor = new Panel { Left = S(24), Top = y, Width = S(496), Height = S(170), BackColor = Tema.CARD };
+            corpo.Controls.Add(cartaoCor);
+            int col = 0, lin = 0;
+            Action<Amostra, string> add = (a, id) =>
+            {
+                a.Tag = id;
+                a.Left = S(14) + col * S(48);
+                a.Top = S(14) + lin * S(48);
+                a.Click += (s, e) => { Tema.Definir(Tema.ModoTema, id); Marcar(); };
+                cartaoCor.Controls.Add(a);
+                cores.Add(a);
+                if (++col == 9) { col = 0; lin++; }
+            };
+            foreach (var p in Tema.Paleta)
+            {
+                var cd = p;
+                add(new Amostra(cd.Nome) { Cor = () => Tema.Escuro ? cd.Escuro : cd.Claro }, cd.Id);
+            }
+            add(new Amostra("Cor de destaque do Windows") { Cor = () => Tema.DestaqueSistema(), Sistema = true }, "sistema");
+            var nota = new Label
+            {
+                Text = "O tom é ajustado automaticamente para o modo claro ou escuro.",
+                ForeColor = Tema.TXT2, BackColor = Tema.CARD, Font = Tema.Fonte(8.5f),
+                Left = S(16), Top = S(124), AutoSize = true
+            };
+            cartaoCor.Controls.Add(nota);
+            y += cartaoCor.Height + S(20);
+
+            var fechar = new Botao("Fechar", true) { Width = S(120), Top = y, Left = S(400) };
+            fechar.Click += (s, e) => Close();
+            corpo.Controls.Add(fechar);
+            var sobre = new Botao("Sobre o Digitalizar", false, "\uE946") { Top = y, Left = S(24) };
+            sobre.Click += (s, e) => { using (var f = new Sobre()) f.ShowDialog(this); };
+            corpo.Controls.Add(sobre);
+
+            Marcar();
+            FinalizarBarra();
+        }
+
+        Label Titulo(string t, int y)
+        {
+            return new Label
+            {
+                Text = t, Font = Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), ForeColor = Tema.TXT, BackColor = Tema.BG,
+                Left = S(24), Top = y, AutoSize = true
+            };
+        }
+
+        void Marcar()
+        {
+            foreach (var o in temas) o.Marcada = (string)o.Tag == Tema.ModoTema;
+            foreach (var a in cores) a.Selecionada = (string)a.Tag == Tema.Destaque;
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Escape) { Close(); return true; }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+    }
+}

@@ -55,7 +55,7 @@ namespace Digitalizar
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            g.Clear(Tema.PREV);
+            g.Clear(BackColor = Tema.PREV);
             if (img == null) return;
             g.InterpolationMode = InterpolationMode.HighQualityBilinear;
             g.PixelOffsetMode = PixelOffsetMode.Half;
@@ -188,7 +188,7 @@ namespace Digitalizar
     }
 
     // ---------------------------------------------------------------- janela do editor
-    class Editor : Form
+    class Editor : FormaModerna
     {
         readonly Bitmap original;
         readonly string arquivo;
@@ -222,17 +222,16 @@ namespace Digitalizar
             if (dpi < 30) dpi = 300;
 
             Text = "Edição rápida – " + Path.GetFileName(arquivo);
-            BackColor = Tema.BG;
-            ForeColor = Color.White;
+            Barra.Titulo = Text;
             Font = Tema.Fonte(10f);
-            ClientSize = new Size(S(1240), S(820));
+            Size = new Size(S(1260), S(880));
             MinimumSize = new Size(S(900), S(600));
             StartPosition = FormStartPosition.CenterParent;
             KeyPreview = true;
-            if (Tema.Icone != null) Icon = Tema.Icone;
 
             proxy = Imagens.Reduzir(img, 1600);
             Montar();
+            FinalizarBarra();
             timer.Tick += (s, e) => { timer.Stop(); Renderizar(); };
             Renderizar();
             alterado = false;
@@ -244,7 +243,7 @@ namespace Digitalizar
             y += S(10);
             lat.Controls.Add(new Label
             {
-                Text = titulo, Font = Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), ForeColor = Color.White,
+                Text = titulo, Font = Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), ForeColor = Tema.TXT,
                 Left = S(18), Top = y, AutoSize = true, BackColor = Tema.BG
             });
             y += S(30);
@@ -313,16 +312,16 @@ namespace Digitalizar
                 Text = "Cortar em todas as bordas:", ForeColor = Tema.TXT2, Font = Tema.Fonte(9f), BackColor = Tema.BG,
                 Left = 0, Top = S(2), AutoSize = true
             });
-            var caixa = new Panel { Left = 0, Top = S(26), Width = S(96), Height = S(38), BackColor = Color.FromArgb(0x2d, 0x2d, 0x2d) };
+            var caixa = new Panel { Left = 0, Top = S(26), Width = S(96), Height = S(38), BackColor = Tema.ENTRADA };
             caixa.Paint += (s2, e2) =>
             {
-                using (var pen = new Pen(Color.FromArgb(0x48, 0x48, 0x48))) e2.Graphics.DrawRectangle(pen, 0, 0, caixa.Width - 1, caixa.Height - 1);
-                using (var pen = new Pen(txtPx.Focused ? Tema.AZUL : Color.FromArgb(0x8a, 0x8a, 0x8a), txtPx.Focused ? 2 : 1))
+                using (var pen = new Pen(Tema.ENTRADA_BORDA)) e2.Graphics.DrawRectangle(pen, 0, 0, caixa.Width - 1, caixa.Height - 1);
+                using (var pen = new Pen(txtPx.Focused ? Tema.AZUL : Tema.TXT2, txtPx.Focused ? 2 : 1))
                     e2.Graphics.DrawLine(pen, 1, caixa.Height - 1, caixa.Width - 2, caixa.Height - 1);
             };
             txtPx = new TextBox
             {
-                Text = "3", BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(0x2d, 0x2d, 0x2d), ForeColor = Color.White,
+                Text = "3", BorderStyle = BorderStyle.None, BackColor = Tema.ENTRADA, ForeColor = Tema.TXT,
                 Font = Tema.Fonte(11f), Left = S(10), Top = S(8), Width = S(50), TextAlign = HorizontalAlignment.Right, MaxLength = 4
             };
             txtPx.KeyPress += (s2, e2) => { if (!char.IsDigit(e2.KeyChar) && !char.IsControl(e2.KeyChar)) e2.Handled = true; };
@@ -330,7 +329,7 @@ namespace Digitalizar
             txtPx.GotFocus += (s2, e2) => caixa.Invalidate();
             txtPx.LostFocus += (s2, e2) => caixa.Invalidate();
             caixa.Controls.Add(txtPx);
-            caixa.Controls.Add(new Label { Text = "px", ForeColor = Tema.TXT2, BackColor = Color.FromArgb(0x2d, 0x2d, 0x2d), Font = Tema.Fonte(10f), Left = S(64), Top = S(9), AutoSize = true });
+            caixa.Controls.Add(new Label { Text = "px", ForeColor = Tema.TXT2, BackColor = Tema.ENTRADA, Font = Tema.Fonte(10f), Left = S(64), Top = S(9), AutoSize = true });
             painelRapido.Controls.Add(caixa);
             var bAplicar = new Botao("Aplicar", true) { Left = S(108), Top = S(26), Width = S(110) };
             bAplicar.Click += (s2, e2) => RecorteRapido();

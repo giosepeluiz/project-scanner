@@ -1,99 +1,40 @@
-// Controles com visual Windows 11 (tema escuro)
+// Controles com visual Windows 11 (tema claro/escuro dinâmico)
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace Digitalizar
 {
-    static class Tema
+    abstract class ControleDesenhado : Control
     {
-        public static readonly Color BG = Color.FromArgb(0x20, 0x20, 0x20);
-        public static readonly Color CARD = Color.FromArgb(0x2b, 0x2b, 0x2b);
-        public static readonly Color CARD_HOVER = Color.FromArgb(0x32, 0x32, 0x32);
-        public static readonly Color BORDA = Color.FromArgb(0x3a, 0x3a, 0x3a);
-        public static readonly Color PREV = Color.FromArgb(0x27, 0x27, 0x27);
-        public static readonly Color TXT2 = Color.FromArgb(0xb5, 0xb5, 0xb5);
-        public static readonly Color AZUL = Color.FromArgb(0x4c, 0xc2, 0xff);
-        public static readonly Color AZUL_HOVER = Color.FromArgb(0x7a, 0xd3, 0xff);
-        public static readonly Color AZUL_PRESS = Color.FromArgb(0x3a, 0xa8, 0xe0);
-
-        public static float Escala = 1f;
-        public static int S(int v) { return (int)Math.Round(v * Escala); }
-
-        static readonly Dictionary<string, Font> fontes = new Dictionary<string, Font>();
-        public static Font Fonte(float tam, FontStyle estilo = FontStyle.Regular, string nome = "Segoe UI")
+        protected ControleDesenhado()
         {
-            string k = nome + tam + estilo;
-            Font f;
-            if (!fontes.TryGetValue(k, out f)) { f = new Font(nome, tam, estilo); fontes[k] = f; }
-            return f;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
         }
-
-        static Icon icone;
-        public static Icon Icone
-        {
-            get
-            {
-                if (icone == null)
-                {
-                    try
-                    {
-                        using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("Digitalizar.ico"))
-                            if (s != null) icone = new Icon(s);
-                    }
-                    catch { }
-                }
-                return icone;
-            }
-        }
-
-        public static GraphicsPath Arredondado(RectangleF r, float raio)
-        {
-            var p = new GraphicsPath();
-            float d = Math.Max(1f, raio * 2);
-            p.AddArc(r.X, r.Y, d, d, 180, 90);
-            p.AddArc(r.Right - d, r.Y, d, d, 270, 90);
-            p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
-            p.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
-            p.CloseFigure();
-            return p;
-        }
-
-        public static Color FundoPai(Control c)
-        {
-            return c.Parent != null ? c.Parent.BackColor : BG;
-        }
-
     }
 
-    // ---------------------------------------------------------------- menu escuro
-    class CoresEscuras : ProfessionalColorTable
+    // ---------------------------------------------------------------- menu
+    class CoresMenu : ProfessionalColorTable
     {
         public override Color ToolStripDropDownBackground { get { return Tema.CARD; } }
-        public override Color MenuBorder { get { return Color.FromArgb(0x45, 0x45, 0x45); } }
-        public override Color MenuItemBorder { get { return Tema.CARD_HOVER; } }
-        public override Color MenuItemSelected { get { return Tema.BORDA; } }
+        public override Color MenuBorder { get { return Tema.BORDA; } }
+        public override Color MenuItemBorder { get { return Tema.MENU_SEL; } }
+        public override Color MenuItemSelected { get { return Tema.MENU_SEL; } }
         public override Color ImageMarginGradientBegin { get { return Tema.CARD; } }
         public override Color ImageMarginGradientMiddle { get { return Tema.CARD; } }
         public override Color ImageMarginGradientEnd { get { return Tema.CARD; } }
-        public override Color CheckBackground { get { return Tema.CARD; } }
-        public override Color CheckSelectedBackground { get { return Tema.BORDA; } }
-        public override Color CheckPressedBackground { get { return Tema.BORDA; } }
     }
 
-    class RenderEscuro : ToolStripProfessionalRenderer
+    class RenderMenu : ToolStripProfessionalRenderer
     {
-        public RenderEscuro() : base(new CoresEscuras()) { RoundedEdges = false; }
+        public RenderMenu() : base(new CoresMenu()) { RoundedEdges = false; }
 
         protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
         {
-            // texto desenhado à mão, centrado na vertical do item
             var r = new Rectangle(Tema.S(22), 0, e.Item.Width - Tema.S(30), e.Item.Height);
-            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, r, e.Item.Enabled ? Color.White : Color.Gray,
+            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, r, e.Item.Enabled ? Tema.TXT : Tema.DESAB,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
         }
 
@@ -106,7 +47,7 @@ namespace Digitalizar
             g.SmoothingMode = SmoothingMode.AntiAlias;
             if (e.Item.Selected || item.Checked)
             {
-                var c = e.Item.Selected ? Tema.BORDA : Color.FromArgb(0x30, 0x30, 0x30);
+                var c = e.Item.Selected ? Tema.MENU_SEL : Tema.CARD_HOVER;
                 using (var p = Tema.Arredondado(new RectangleF(Tema.S(4), Tema.S(2), r.Width - Tema.S(8), r.Height - Tema.S(4)), Tema.S(4)))
                 using (var b = new SolidBrush(c)) g.FillPath(b, p);
             }
@@ -122,64 +63,13 @@ namespace Digitalizar
         protected override void OnRenderItemCheck(ToolStripItemImageRenderEventArgs e) { }
     }
 
-    // ---------------------------------------------------------------- interruptor (switch)
-    class Interruptor : Control
-    {
-        bool ligado, hover;
-        public event EventHandler Alterado;
-
-        public Interruptor(string texto)
-        {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
-            Text = texto;
-            Cursor = Cursors.Hand;
-            Font = Tema.Fonte(9.5f);
-            Height = Tema.S(28);
-            Width = Tema.S(56) + TextRenderer.MeasureText(texto, Font).Width;
-        }
-
-        public bool Ligado
-        {
-            get { return ligado; }
-            set { if (value == ligado) return; ligado = value; Invalidate(); if (Alterado != null) Alterado(this, EventArgs.Empty); }
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            var g = e.Graphics;
-            g.Clear(Tema.FundoPai(this));
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            float w = Tema.S(40), h = Tema.S(20), y = (Height - h) / 2f;
-            var r = new RectangleF(0.5f, y, w, h);
-            using (var p = Tema.Arredondado(r, h / 2 - 0.01f))
-            {
-                if (ligado) using (var b = new SolidBrush(hover ? Tema.AZUL_HOVER : Tema.AZUL)) g.FillPath(b, p);
-                else
-                {
-                    using (var b = new SolidBrush(hover ? Color.FromArgb(0x3a, 0x3a, 0x3a) : Color.FromArgb(0x2b, 0x2b, 0x2b))) g.FillPath(b, p);
-                    using (var pen = new Pen(Color.FromArgb(0xa0, 0xa0, 0xa0), 1f)) g.DrawPath(pen, p);
-                }
-            }
-            float d = ligado ? Tema.S(12) : Tema.S(10);
-            float cx = ligado ? w - h / 2 : h / 2 + 0.5f, cy = y + h / 2;
-            using (var b = new SolidBrush(ligado ? Color.Black : Color.FromArgb(0xd0, 0xd0, 0xd0)))
-                g.FillEllipse(b, cx - d / 2, cy - d / 2, d, d);
-            TextRenderer.DrawText(g, Text, Font, new Rectangle((int)w + Tema.S(12), 0, Width - (int)w - Tema.S(12), Height),
-                Color.White, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
-        }
-
-        protected override void OnClick(EventArgs e) { Ligado = !Ligado; base.OnClick(e); }
-        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
-        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
-    }
-
     // ---------------------------------------------------------------- seletor (card clicável)
-    class Seletor : Control
+    class Seletor : ControleDesenhado
     {
         public string Titulo = "";
         public string Subtitulo;
         public string ValorFixo;
-        public Color CorValor = Color.White;
+        public bool CorDestaque;
         public bool Seta = true;
         public string LinkTexto;
         public event EventHandler LinkClicado;
@@ -190,12 +80,7 @@ namespace Digitalizar
         int indice = -1;
         bool hover, hoverLink;
 
-        public Seletor()
-        {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
-            Cursor = Cursors.Hand;
-            Height = Tema.S(68);
-        }
+        public Seletor() { Cursor = Cursors.Hand; Height = Tema.S(68); }
 
         public string[] Itens
         {
@@ -215,7 +100,6 @@ namespace Digitalizar
         }
 
         public string Valor { get { return indice >= 0 && indice < itens.Length ? itens[indice] : null; } }
-
         public void Selecionar(string v) { Indice = Array.IndexOf(itens, v); }
 
         Rectangle RetLink()
@@ -233,7 +117,7 @@ namespace Digitalizar
             using (var p = Tema.Arredondado(new RectangleF(0, 0, Width - 1, Height - 1), Tema.S(6)))
             {
                 using (var b = new SolidBrush(hover ? Tema.CARD_HOVER : Tema.CARD)) g.FillPath(b, p);
-                using (var pen = new Pen(Color.FromArgb(0x30, 0x30, 0x30))) g.DrawPath(pen, p);
+                using (var pen = new Pen(Tema.CONTORNO)) g.DrawPath(pen, p);
             }
 
             var rl = RetLink();
@@ -247,7 +131,7 @@ namespace Digitalizar
 
             string valor = ValorFixo ?? Valor ?? "—";
             var rv = new Rectangle(Tema.S(14), Tema.S(30), Width - Tema.S(14) - (Seta ? Tema.S(44) : Tema.S(14)), Tema.S(28));
-            TextRenderer.DrawText(g, valor, Tema.Fonte(12.5f), rv, CorValor,
+            TextRenderer.DrawText(g, valor, Tema.Fonte(12.5f), rv, CorDestaque ? Tema.AZUL : Tema.TXT,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
             if (!string.IsNullOrEmpty(Subtitulo))
@@ -257,8 +141,7 @@ namespace Digitalizar
 
             if (Seta)
             {
-                float cx = Width - Tema.S(26), cy = rv.Top + rv.Height / 2f;
-                float a = Tema.S(5);
+                float cx = Width - Tema.S(26), cy = rv.Top + rv.Height / 2f, a = Tema.S(5);
                 using (var pen = new Pen(Tema.AZUL, Math.Max(1.5f, Tema.Escala * 1.6f)))
                 {
                     pen.StartCap = pen.EndCap = LineCap.Round;
@@ -288,13 +171,13 @@ namespace Digitalizar
         {
             var m = new ContextMenuStrip
             {
-                Renderer = new RenderEscuro(), ShowImageMargin = false, ShowCheckMargin = false,
+                Renderer = new RenderMenu(), ShowImageMargin = false, ShowCheckMargin = false,
                 BackColor = Tema.CARD, Font = Tema.Fonte(11f), Padding = new Padding(0, Tema.S(4), 0, Tema.S(4))
             };
             for (int i = 0; i < itens.Length; i++)
             {
                 int k = i;
-                var it = new ToolStripMenuItem(itens[i]) { Checked = i == indice, ForeColor = Color.White, AutoSize = false };
+                var it = new ToolStripMenuItem(itens[i]) { Checked = i == indice, AutoSize = false };
                 it.Size = new Size(Width - Tema.S(4), Tema.S(36));
                 it.Click += (s, e) => Indice = k;
                 m.Items.Add(it);
@@ -304,21 +187,39 @@ namespace Digitalizar
         }
     }
 
-    // ---------------------------------------------------------------- botão arredondado
-    class Botao : Control
+    // ---------------------------------------------------------------- botão arredondado (com ícone opcional)
+    class Botao : ControleDesenhado
     {
         public bool Primario;
+        public string Glifo;
+        readonly string textoCompleto;
         bool hover, press;
+        readonly ToolTip dica = new ToolTip();
 
-        public Botao(string texto, bool primario)
+        public int LarguraCompleta
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            get { return TextRenderer.MeasureText(textoCompleto, Font).Width + Tema.S(30) + (Glifo != null ? Tema.S(26) : 0); }
+        }
+
+        /// Mostra só o ícone (janela estreita) ou ícone + texto
+        public void SoIcone(bool so)
+        {
+            if (Glifo == null) return;
+            Text = so ? "" : textoCompleto;
+            Width = so ? Tema.S(44) : LarguraCompleta;
+            dica.SetToolTip(this, so ? textoCompleto : null);
+        }
+
+        public Botao(string texto, bool primario, string glifo = null)
+        {
             Text = texto;
+            textoCompleto = texto;
             Primario = primario;
+            Glifo = Tema.G(glifo);
             Cursor = Cursors.Hand;
             Font = Tema.Fonte(10.5f, primario ? FontStyle.Bold : FontStyle.Regular);
             Height = Tema.S(38);
-            Width = TextRenderer.MeasureText(texto, Font).Width + Tema.S(30);
+            Width = TextRenderer.MeasureText(texto, Font).Width + Tema.S(30) + (glifo != null ? Tema.S(26) : 0);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -329,21 +230,32 @@ namespace Digitalizar
             Color fundo, txt;
             if (Primario)
             {
-                fundo = !Enabled ? Color.FromArgb(0x36, 0x4a, 0x58) : press ? Tema.AZUL_PRESS : hover ? Tema.AZUL_HOVER : Tema.AZUL;
-                txt = Enabled ? Color.Black : Color.FromArgb(0x8a, 0x8a, 0x8a);
+                fundo = !Enabled ? Tema.Misturar(Tema.AZUL, Tema.BG, 0.6) : press ? Tema.AZUL_PRESS : hover ? Tema.AZUL_HOVER : Tema.AZUL;
+                txt = Enabled ? Tema.TXT_SOBRE_AZUL : Tema.Misturar(Tema.TXT_SOBRE_AZUL, fundo, 0.5);
             }
             else
             {
-                fundo = !Enabled ? Color.FromArgb(0x2a, 0x2a, 0x2a) : press ? Color.FromArgb(0x2e, 0x2e, 0x2e) : hover ? Color.FromArgb(0x3c, 0x3c, 0x3c) : Color.FromArgb(0x34, 0x34, 0x34);
-                txt = Enabled ? Color.White : Color.FromArgb(0x6a, 0x6a, 0x6a);
+                fundo = !Enabled ? Tema.CARD : press ? Tema.BOTAO_PRESS : hover ? Tema.BOTAO_HOVER : Tema.BOTAO;
+                txt = Enabled ? Tema.TXT : Tema.DESAB;
             }
             using (var p = Tema.Arredondado(new RectangleF(0, 0, Width - 1, Height - 1), Tema.S(5)))
             {
                 using (var b = new SolidBrush(fundo)) g.FillPath(b, p);
-                if (!Primario) using (var pen = new Pen(Color.FromArgb(0x44, 0x44, 0x44))) g.DrawPath(pen, p);
+                if (!Primario) using (var pen = new Pen(Tema.BOTAO_BORDA)) g.DrawPath(pen, p);
             }
-            TextRenderer.DrawText(g, Text, Font, ClientRectangle, txt,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
+
+            var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding;
+            var tt = TextRenderer.MeasureText(Text, Font, Size.Empty, flags);
+            int gw = Glifo != null ? Tema.S(26) : 0;
+            if (Text.Length == 0 && Glifo != null)
+            {
+                TextRenderer.DrawText(g, Glifo, Tema.Icones(11f), ClientRectangle, txt, flags | TextFormatFlags.HorizontalCenter);
+                return;
+            }
+            int x = Math.Max(Tema.S(8), (Width - tt.Width - gw) / 2);
+            if (Glifo != null)
+                TextRenderer.DrawText(g, Glifo, Tema.Icones(11f), new Rectangle(x, 0, Tema.S(18), Height), txt, flags | TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(g, Text, Font, new Rectangle(x + gw, 0, Width - x - gw, Height), txt, flags | TextFormatFlags.EndEllipsis);
         }
 
         protected override void OnTextChanged(EventArgs e) { base.OnTextChanged(e); Invalidate(); }
@@ -352,10 +264,11 @@ namespace Digitalizar
         protected override void OnMouseLeave(EventArgs e) { hover = false; press = false; Invalidate(); base.OnMouseLeave(e); }
         protected override void OnMouseDown(MouseEventArgs e) { press = true; Invalidate(); base.OnMouseDown(e); }
         protected override void OnMouseUp(MouseEventArgs e) { press = false; Invalidate(); base.OnMouseUp(e); }
+        protected override void Dispose(bool disposing) { if (disposing) dica.Dispose(); base.Dispose(disposing); }
     }
 
-    // ---------------------------------------------------------------- barra de progresso fina
-    class BarraProgresso : Control
+    // ---------------------------------------------------------------- barra de progresso
+    class BarraProgresso : ControleDesenhado
     {
         readonly Timer timer = new Timer { Interval = 16 };
         float pos;
@@ -363,7 +276,6 @@ namespace Digitalizar
 
         public BarraProgresso()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             Height = Tema.S(4);
             timer.Tick += (s, e) => { pos += 0.012f; if (pos > 1.3f) pos = -0.3f; Invalidate(); };
         }
@@ -380,8 +292,7 @@ namespace Digitalizar
             g.Clear(Tema.FundoPai(this));
             if (!ativo) return;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            float w = Width * 0.3f, x = pos * Width;
-            var r = RectangleF.Intersect(new RectangleF(x, 0, w, Height), new RectangleF(0, 0, Width, Height));
+            var r = RectangleF.Intersect(new RectangleF(pos * Width, 0, Width * 0.3f, Height), new RectangleF(0, 0, Width, Height));
             if (r.Width > 1)
                 using (var p = Tema.Arredondado(r, Height / 2f - 0.01f))
                 using (var b = new SolidBrush(Tema.AZUL)) g.FillPath(b, p);
@@ -390,8 +301,146 @@ namespace Digitalizar
         protected override void Dispose(bool disposing) { if (disposing) timer.Dispose(); base.Dispose(disposing); }
     }
 
+    // ---------------------------------------------------------------- interruptor (switch)
+    class Interruptor : ControleDesenhado
+    {
+        bool ligado, hover;
+        public event EventHandler Alterado;
+
+        public Interruptor(string texto)
+        {
+            Text = texto;
+            Cursor = Cursors.Hand;
+            Font = Tema.Fonte(9.5f);
+            Height = Tema.S(28);
+            Width = Tema.S(56) + TextRenderer.MeasureText(texto, Font).Width;
+        }
+
+        public bool Ligado
+        {
+            get { return ligado; }
+            set { if (value == ligado) return; ligado = value; Invalidate(); if (Alterado != null) Alterado(this, EventArgs.Empty); }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.Clear(Tema.FundoPai(this));
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            float w = Tema.S(40), h = Tema.S(20), y = (Height - h) / 2f;
+            using (var p = Tema.Arredondado(new RectangleF(0.5f, y, w, h), h / 2 - 0.01f))
+            {
+                if (ligado) using (var b = new SolidBrush(hover ? Tema.AZUL_HOVER : Tema.AZUL)) g.FillPath(b, p);
+                else
+                {
+                    using (var b = new SolidBrush(hover ? Tema.CARD_HOVER : Tema.ENTRADA)) g.FillPath(b, p);
+                    using (var pen = new Pen(Tema.TXT2, 1f)) g.DrawPath(pen, p);
+                }
+            }
+            float d = ligado ? Tema.S(12) : Tema.S(10);
+            float cx = ligado ? w - h / 2 : h / 2 + 0.5f, cy = y + h / 2;
+            using (var b = new SolidBrush(ligado ? Tema.TXT_SOBRE_AZUL : Tema.TXT2))
+                g.FillEllipse(b, cx - d / 2, cy - d / 2, d, d);
+            TextRenderer.DrawText(g, Text, Font, new Rectangle((int)w + Tema.S(12), 0, Width - (int)w - Tema.S(12), Height),
+                Enabled ? Tema.TXT : Tema.DESAB, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+        }
+
+        protected override void OnClick(EventArgs e) { Ligado = !Ligado; base.OnClick(e); }
+        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+    }
+
+    // ---------------------------------------------------------------- botão de opção (radio)
+    class Opcao : ControleDesenhado
+    {
+        bool marcada, hover;
+        public event EventHandler Escolhida;
+
+        public Opcao(string texto)
+        {
+            Text = texto;
+            Cursor = Cursors.Hand;
+            Font = Tema.Fonte(10f);
+            Height = Tema.S(32);
+            Width = Tema.S(34) + TextRenderer.MeasureText(texto, Font).Width;
+        }
+
+        public bool Marcada { get { return marcada; } set { marcada = value; Invalidate(); } }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.Clear(Tema.FundoPai(this));
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            float d = Tema.S(20), y = (Height - d) / 2f;
+            if (marcada)
+            {
+                using (var b = new SolidBrush(Tema.AZUL)) g.FillEllipse(b, 0.5f, y, d, d);
+                float i = hover ? Tema.S(10) : Tema.S(8);
+                using (var b = new SolidBrush(Tema.TXT_SOBRE_AZUL)) g.FillEllipse(b, 0.5f + (d - i) / 2, y + (d - i) / 2, i, i);
+            }
+            else
+            {
+                using (var b = new SolidBrush(hover ? Tema.CARD_HOVER : Tema.ENTRADA)) g.FillEllipse(b, 0.5f, y, d, d);
+                using (var pen = new Pen(Tema.TXT2)) g.DrawEllipse(pen, 0.5f, y, d, d);
+            }
+            TextRenderer.DrawText(g, Text, Font, new Rectangle(Tema.S(30), 0, Width - Tema.S(30), Height), Tema.TXT,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+        }
+
+        protected override void OnClick(EventArgs e) { if (Escolhida != null) Escolhida(this, EventArgs.Empty); base.OnClick(e); }
+        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+    }
+
+    // ---------------------------------------------------------------- amostra de cor (paleta)
+    class Amostra : ControleDesenhado
+    {
+        public Func<Color> Cor;
+        public bool Sistema;
+        bool selecionada, hover;
+        readonly ToolTip dica = new ToolTip();
+
+        public Amostra(string nome)
+        {
+            Size = new Size(Tema.S(40), Tema.S(40));
+            Cursor = Cursors.Hand;
+            dica.SetToolTip(this, nome);
+        }
+
+        public bool Selecionada { get { return selecionada; } set { selecionada = value; Invalidate(); } }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.Clear(Tema.FundoPai(this));
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            float m = Tema.S(5), d = Width - 2 * m;
+            Color c = Cor();
+            if (selecionada || hover)
+                using (var pen = new Pen(selecionada ? Tema.TXT : Tema.TXT2, Tema.S(2))) g.DrawEllipse(pen, Tema.S(1), Tema.S(1), Width - Tema.S(3), Height - Tema.S(3));
+            using (var b = new SolidBrush(c)) g.FillEllipse(b, m, m, d, d);
+            if (Sistema)
+            {
+                double lum = (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255.0;
+                TextRenderer.DrawText(g, Tema.G("\uE770"), Tema.Icones(9f), new Rectangle(0, 0, Width, Height), lum > 0.55 ? Color.Black : Color.White,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            }
+            else if (selecionada)
+            {
+                double lum = (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255.0;
+                TextRenderer.DrawText(g, Tema.G("\uE73E"), Tema.Icones(10f), new Rectangle(0, 0, Width, Height), lum > 0.55 ? Color.Black : Color.White,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            }
+        }
+
+        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void Dispose(bool disposing) { if (disposing) dica.Dispose(); base.Dispose(disposing); }
+    }
+
     // ---------------------------------------------------------------- deslizador (slider)
-    class Deslizador : Control
+    class Deslizador : ControleDesenhado
     {
         public string Titulo = "";
         public int Min = 0, Max = 100, Padrao = 0;
@@ -401,12 +450,7 @@ namespace Digitalizar
         int valor;
         bool arrastando, hover;
 
-        public Deslizador()
-        {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
-            Height = Tema.S(48);
-            Cursor = Cursors.Hand;
-        }
+        public Deslizador() { Height = Tema.S(48); Cursor = Cursors.Hand; }
 
         public int Valor
         {
@@ -432,28 +476,28 @@ namespace Digitalizar
             var g = e.Graphics;
             g.Clear(Tema.FundoPai(this));
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            Color acento = Enabled ? Tema.AZUL : Tema.DESAB;
 
-            TextRenderer.DrawText(g, Titulo, Tema.Fonte(9.5f), new Point(0, Tema.S(2)), Color.FromArgb(0xd8, 0xd8, 0xd8), TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(g, Titulo, Tema.Fonte(9.5f), new Point(0, Tema.S(2)), Enabled ? Tema.TXT : Tema.DESAB, TextFormatFlags.NoPadding);
             string txt = Formato != null ? Formato(valor) : valor.ToString();
             var sz = TextRenderer.MeasureText(txt, Tema.Fonte(9.5f), Size.Empty, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(g, txt, Tema.Fonte(9.5f), new Point(Width - sz.Width, Tema.S(2)),
-                valor == Padrao ? Tema.TXT2 : Tema.AZUL, TextFormatFlags.NoPadding);
+                valor == Padrao || !Enabled ? Tema.TXT2 : Tema.AZUL, TextFormatFlags.NoPadding);
 
             float h = Tema.S(4);
             using (var p = Tema.Arredondado(new RectangleF(X0, YT - h / 2, X1 - X0, h), h / 2 - 0.01f))
-            using (var b = new SolidBrush(Color.FromArgb(0x60, 0x60, 0x60))) g.FillPath(b, p);
+            using (var b = new SolidBrush(Tema.TRILHO)) g.FillPath(b, p);
 
             float zero = (Min < 0 && Max > 0) ? Pos(0) : X0;
             float px = Pos(valor);
             float a = Math.Min(zero, px), w = Math.Abs(px - zero);
-            if (w > 0.5f)
-                using (var b = new SolidBrush(Tema.AZUL)) g.FillRectangle(b, a, YT - h / 2, w, h);
+            if (w > 0.5f) using (var b = new SolidBrush(acento)) g.FillRectangle(b, a, YT - h / 2, w, h);
 
             float r = Tema.S(10);
-            using (var b = new SolidBrush(Color.FromArgb(0x45, 0x45, 0x45))) g.FillEllipse(b, px - r, YT - r, 2 * r, 2 * r);
-            using (var pen = new Pen(Color.FromArgb(0x50, 0x50, 0x50))) g.DrawEllipse(pen, px - r, YT - r, 2 * r, 2 * r);
+            using (var b = new SolidBrush(Tema.POLEGAR)) g.FillEllipse(b, px - r, YT - r, 2 * r, 2 * r);
+            using (var pen = new Pen(Tema.BOTAO_BORDA)) g.DrawEllipse(pen, px - r, YT - r, 2 * r, 2 * r);
             float ri = arrastando ? Tema.S(4) : hover ? Tema.S(7) : Tema.S(5);
-            using (var b = new SolidBrush(Tema.AZUL)) g.FillEllipse(b, px - ri, YT - ri, 2 * ri, 2 * ri);
+            using (var b = new SolidBrush(acento)) g.FillEllipse(b, px - ri, YT - ri, 2 * ri, 2 * ri);
         }
 
         void Mover(int x)
@@ -474,17 +518,18 @@ namespace Digitalizar
         protected override void OnMouseDoubleClick(MouseEventArgs e) { Valor = Padrao; base.OnMouseDoubleClick(e); }
         protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
         protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnEnabledChanged(EventArgs e) { base.OnEnabledChanged(e); Invalidate(); }
     }
 
     // ---------------------------------------------------------------- editor de curvas
-    class CurvaEditor : Control
+    class CurvaEditor : ControleDesenhado
     {
         readonly List<Point> pts = new List<Point> { new Point(0, 0), new Point(255, 255) };
         public int[] Histograma;
         public event EventHandler Alterado;
         int arrastando = -1;
 
-        public CurvaEditor() { SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true); Cursor = Cursors.Cross; }
+        public CurvaEditor() { Cursor = Cursors.Cross; }
 
         int M { get { return Tema.S(8); } }
         RectangleF Area { get { return new RectangleF(M, M, Width - 2 * M, Height - 2 * M); } }
@@ -502,10 +547,7 @@ namespace Digitalizar
             return new Point(Math.Max(0, Math.Min(255, cx)), Math.Max(0, Math.Min(255, cy)));
         }
 
-        public bool Identidade
-        {
-            get { return pts.Count == 2 && pts[0] == new Point(0, 0) && pts[1] == new Point(255, 255); }
-        }
+        public bool Identidade { get { return pts.Count == 2 && pts[0] == new Point(0, 0) && pts[1] == new Point(255, 255); } }
 
         public void Repor(bool evento)
         {
@@ -555,14 +597,17 @@ namespace Digitalizar
             g.SmoothingMode = SmoothingMode.AntiAlias;
             var a = Area;
             using (var p = Tema.Arredondado(new RectangleF(0, 0, Width - 1, Height - 1), Tema.S(6)))
-            using (var b = new SolidBrush(Color.FromArgb(0x1a, 0x1a, 0x1a))) g.FillPath(b, p);
+            {
+                using (var b = new SolidBrush(Tema.CURVA_BG)) g.FillPath(b, p);
+                using (var pen = new Pen(Tema.CONTORNO)) g.DrawPath(pen, p);
+            }
 
             if (Histograma != null)
             {
                 double max = 0;
                 for (int i = 0; i < 256; i++) max = Math.Max(max, Math.Sqrt(Histograma[i]));
                 if (max > 0)
-                    using (var b = new SolidBrush(Color.FromArgb(0x3a, 0x3a, 0x3a)))
+                    using (var b = new SolidBrush(Tema.CURVA_HIST))
                         for (int i = 0; i < 256; i++)
                         {
                             float hh = (float)(Math.Sqrt(Histograma[i]) / max * a.Height);
@@ -570,13 +615,13 @@ namespace Digitalizar
                         }
             }
 
-            using (var pen = new Pen(Color.FromArgb(0x33, 0x33, 0x33)))
+            using (var pen = new Pen(Tema.CURVA_GRADE))
                 for (int i = 1; i < 4; i++)
                 {
                     g.DrawLine(pen, a.X + a.Width * i / 4, a.Y, a.X + a.Width * i / 4, a.Bottom);
                     g.DrawLine(pen, a.X, a.Y + a.Height * i / 4, a.Right, a.Y + a.Height * i / 4);
                 }
-            using (var pen = new Pen(Color.FromArgb(0x50, 0x50, 0x50)) { DashStyle = DashStyle.Dash })
+            using (var pen = new Pen(Tema.TRILHO) { DashStyle = DashStyle.Dash })
                 g.DrawLine(pen, ParaTela(0, 0), ParaTela(255, 255));
 
             var lut = Lut();
@@ -588,8 +633,8 @@ namespace Digitalizar
             foreach (var p in pts)
             {
                 var c = ParaTela(p.X, p.Y);
-                g.FillEllipse(Brushes.White, c.X - r, c.Y - r, 2 * r, 2 * r);
-                using (var pen = new Pen(Tema.AZUL, 1.5f)) g.DrawEllipse(pen, c.X - r, c.Y - r, 2 * r, 2 * r);
+                using (var b = new SolidBrush(Tema.CARD)) g.FillEllipse(b, c.X - r, c.Y - r, 2 * r, 2 * r);
+                using (var pen = new Pen(Tema.AZUL, 2f)) g.DrawEllipse(pen, c.X - r, c.Y - r, 2 * r, 2 * r);
             }
         }
 

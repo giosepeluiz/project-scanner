@@ -23,7 +23,10 @@ namespace Digitalizar
 {
     static class Config
     {
-        public const string PastaPadrao = @"C:\Users\giosepeluiz\OneDrive\Documents\Scanned Documents";
+        public static readonly bool Windows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+        public static readonly string PastaPadrao = Windows
+            ? @"C:\Users\giosepeluiz\OneDrive\Documents\Scanned Documents"
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Scanned Documents");
         public static readonly string[] Tipos = { "JPEG", "PNG", "PDF" };
         public const string TipoPadrao = "JPEG";
         public static readonly string[] Modos = { "Cor", "Cinza", "Preto e branco" };
@@ -31,6 +34,34 @@ namespace Digitalizar
         public static readonly string[] Resolucoes = { "75", "150", "300", "600", "1200" };
         public const string ResolucaoPadrao = "300";
         public static readonly string[] Fontes = { "Área do vidro" };
+
+        // Tamanhos normalizados (ISO 216 e norte-americanos) que cabem no vidro; medidas em cm (largura × altura)
+        public class Tamanho
+        {
+            public string Nome; public double L, A;
+            public Tamanho(string n, double l, double a) { Nome = n; L = l; A = a; }
+            public override string ToString()
+            {
+                if (L <= 0) return Nome;
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                return Nome + " (" + L.ToString("0.##", inv) + " × " + A.ToString("0.##", inv) + " cm)";
+            }
+        }
+        public static readonly Tamanho[] Tamanhos =
+        {
+            new Tamanho("A4", 21.0, 29.7),
+            new Tamanho("A5", 14.8, 21.0),
+            new Tamanho("A6", 10.5, 14.8),
+            new Tamanho("B5 (ISO)", 17.6, 25.0),
+            new Tamanho("B6 (ISO)", 12.5, 17.6),
+            new Tamanho("Carta (EUA)", 21.59, 27.94),
+            new Tamanho("Executivo (EUA)", 18.42, 26.67),
+            new Tamanho("Foto 10 × 15", 10.0, 15.0),
+            new Tamanho("Foto 13 × 18", 13.0, 18.0),
+            new Tamanho("Cartão de visita", 8.5, 5.5),
+            new Tamanho("Área máxima do vidro", 0, 0),
+        };
+        public const int TamanhoPadrao = 0;
     }
 
     // ============================================================ WIA
@@ -65,6 +96,7 @@ namespace Digitalizar
 
         public static List<ScannerInfo> Listar()
         {
+            if (!Config.Windows) return Sane.Listar();
             var lista = new List<ScannerInfo>();
             dynamic dm = NovoGerenciador();
             dynamic infos = dm.DeviceInfos;
@@ -118,8 +150,18 @@ namespace Digitalizar
             try { object max = p.SubTypeMax; Definir(props, id, max); } catch { }
         }
 
-        public static Bitmap Digitalizar(string deviceId, string modo, int dpi)
+        static void Limitar(dynamic props, int id, int valor)
         {
+            dynamic p = AcharProp(props, id);
+            if (p == null) return;
+            int v = valor;
+            try { int max = Convert.ToInt32(p.SubTypeMax); if (v > max) v = max; } catch { }
+            Definir(props, id, v);
+        }
+
+        public static Bitmap Digitalizar(string deviceId, string modo, int dpi, double larguraCm, double alturaCm)
+        {
+            if (!Config.Windows) return Sane.Digitalizar(deviceId, modo, dpi, larguraCm, alturaCm);
             dynamic dm = NovoGerenciador();
             dynamic infos = dm.DeviceInfos;
             dynamic dispositivo = null;
@@ -145,8 +187,19 @@ namespace Digitalizar
             Definir(props, PROP_YRES, dpi);
             Definir(props, PROP_XPOS, 0);
             Definir(props, PROP_YPOS, 0);
-            Maximizar(props, PROP_XEXT);
-            Maximizar(props, PROP_YEXT);
+            int wPx = 0, hPx = 0;
+            if (larguraCm > 0 && alturaCm > 0)
+            {
+                wPx = (int)Math.Round(larguraCm / 2.54 * dpi);
+                hPx = (int)Math.Round(alturaCm / 2.54 * dpi);
+                Limitar(props, PROP_XEXT, wPx);
+                Limitar(props, PROP_YEXT, hPx);
+            }
+            else
+            {
+                Maximizar(props, PROP_XEXT);
+                Maximizar(props, PROP_YEXT);
+            }
 
             dynamic imagem = item.Transfer(FORMATO_BMP);
 
@@ -166,6 +219,14 @@ namespace Digitalizar
             if (modo == "Cinza") Imagens.ConverterCinza(bmp);
             else if (modo == "Preto e branco") Imagens.ConverterPB(bmp);
 
+            // se o driver ignorou o tamanho pedido, corta a partir do canto do vidro
+            if (wPx > 0 && (bmp.Width > wPx + 2 || bmp.Height > hPx + 2))
+            {
+                var r = new Rectangle(0, 0, Math.Min(wPx, bmp.Width), Math.Min(hPx, bmp.Height));
+                var c = bmp.Clone(r, PixelFormat.Format24bppRgb);
+                bmp.Dispose();
+                bmp = c;
+            }
             bmp.SetResolution(dpi, dpi);
             return bmp;
         }
@@ -193,6 +254,98 @@ namespace Digitalizar
                 return "Erro do scanner (código 0x" + c.ToString("X8") + ").";
             }
             return e.Message;
+        }
+    }
+
+    // ============================================================ SANE (Linux) via scanimage
+    static class Sane
+    {
+        static string Executar(string args, Stream saidaBinaria, out string erros)
+        {
+            var psi = new ProcessStartInfo("scanimage", args)
+            {
+                UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+            };
+            Process p;
+            try { p = Process.Start(psi); }
+            catch { throw new Exception("O 'scanimage' não foi encontrado. Instale o SANE: sudo apt install sane-utils"); }
+            string texto = null;
+            var tErr = new Thread(() => { texto = p.StandardError.ReadToEnd(); });
+            tErr.Start();
+            string saida = null;
+            if (saidaBinaria != null) p.StandardOutput.BaseStream.CopyTo(saidaBinaria);
+            else saida = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+            tErr.Join();
+            erros = texto ?? "";
+            if (p.ExitCode != 0)
+            {
+                string msg = erros.Trim();
+                throw new Exception(msg.Length > 0 ? "scanimage: " + msg : "Falha ao comunicar com o scanner (código " + p.ExitCode + ").");
+            }
+            return saida;
+        }
+
+        public static List<ScannerInfo> Listar()
+        {
+            string err;
+            string saida = Executar("-L", null, out err);
+            var lista = new List<ScannerInfo>();
+            var rx = new System.Text.RegularExpressions.Regex("device `(.+?)' is an? (.+)");
+            foreach (var linha in saida.Split('\n'))
+            {
+                var m = rx.Match(linha);
+                if (m.Success) lista.Add(new ScannerInfo { Id = m.Groups[1].Value, Nome = m.Groups[2].Value.Trim() });
+            }
+            return lista;
+        }
+
+        public static Bitmap Digitalizar(string dispositivo, string modo, int dpi, double larguraCm, double alturaCm)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string modoSane = modo == "Cor" ? "Color" : "Gray";   // P&B: capturado em cinza e convertido aqui (mais compatível)
+            string args = "-d \"" + dispositivo + "\" --format=png --mode " + modoSane + " --resolution " + dpi;
+            if (larguraCm > 0 && alturaCm > 0)
+                args += " -l 0 -t 0 -x " + (larguraCm * 10).ToString("0.#", inv) + " -y " + (alturaCm * 10).ToString("0.#", inv);
+
+            var ms = new MemoryStream();
+            string err;
+            Executar(args, ms, out err);
+            if (ms.Length == 0) throw new Exception("O scanner não devolveu nenhuma imagem.");
+            ms.Position = 0;
+            Bitmap bmp;
+            using (var original = new Bitmap(ms)) bmp = Imagens.Para24bpp(original);
+            if (modo == "Cinza") Imagens.ConverterCinza(bmp);
+            else if (modo == "Preto e branco") Imagens.ConverterPB(bmp);
+            bmp.SetResolution(dpi, dpi);
+            return bmp;
+        }
+    }
+
+    // ============================================================ Compartilhar (janela de partilha do Windows)
+    static class Partilha
+    {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct SHELLEXECUTEINFO
+        {
+            public int cbSize; public uint fMask; public IntPtr hwnd;
+            public string lpVerb, lpFile, lpParameters, lpDirectory;
+            public int nShow; public IntPtr hInstApp, lpIDList; public string lpClass;
+            public IntPtr hkeyClass; public uint dwHotKey; public IntPtr hIcon, hProcess;
+        }
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO info);
+
+        /// Abre a janela "Compartilhar" do Windows para o ficheiro (o mesmo do menu do Explorador)
+        public static bool Abrir(IntPtr janela, string caminho)
+        {
+            var i = new SHELLEXECUTEINFO
+            {
+                cbSize = Marshal.SizeOf(typeof(SHELLEXECUTEINFO)),
+                fMask = 0x0000000C | 0x00000400, // INVOKEIDLIST | FLAG_NO_UI
+                hwnd = janela, lpVerb = "Windows.ModernShare", lpFile = caminho, nShow = 1
+            };
+            try { return ShellExecuteEx(ref i); } catch { return false; }
         }
     }
 
