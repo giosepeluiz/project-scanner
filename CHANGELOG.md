@@ -7,6 +7,26 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ---
 
+## [3.2.0] – 2026-11-07 · "Fala a sua língua" 🌍
+
+### Adicionado
+- **Idiomas:** a interface está traduzida para 15 idiomas.
+  - Na primeira vez, o programa usa o idioma do sistema (`CurrentUICulture`). Se ele não estiver disponível, usa inglês.
+  - Ordem nas **Opções → Idioma**: Idioma do sistema, Português (Brasil), Português (Portugal), English (United States), English (United Kingdom), Español, um separador e depois Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文（简体）.
+  - O idioma novo é aplicado ao reiniciar, com o botão **Reiniciar agora**.
+  - As traduções ficam em `src/idiomas.tsv`, uma coluna por idioma; um texto que falte usa o inglês.
+- **Preferências guardadas:** além do tema e da cor, o `config.ini` guarda o idioma, o scanner (pelo nome), o tamanho do documento, o tipo de arquivo, o modo de cor, a resolução, a pasta de destino, o painel recolhido ou expandido, o tamanho, a posição e o estado da janela (normal/maximizada) e o valor do Recorte rápido.
+- Separadores no menu dos seletores.
+
+### Alterado
+- Os seletores mostram os valores traduzidos e guardam o valor interno, por isso a configuração não depende do idioma.
+- A janela só volta para a posição guardada se ela ainda estiver visível num dos monitores.
+
+### Corrigido
+- O texto "Redes e contato" aparecia com a grafia de Portugal na versão pt-BR.
+
+---
+
 ## [3.1.0] – 2026-11-07 · "Muito prazer!" 🐧
 
 ### Adicionado
@@ -95,6 +115,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Ações depois de digitalizar: **Copiar imagem**, **Abrir** e **Abrir pasta**.
 - `compilar.bat`: recompila usando o `csc.exe` que já vem no Windows.
 
+[3.2.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0
 [3.1.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0
 [3.0.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0
 [2.1.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v2.1.0

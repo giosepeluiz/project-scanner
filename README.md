@@ -6,7 +6,7 @@
 
 ### Digitalize, ajuste e compartilhe em segundos, sem instalar nada.
 
-[![Versão](https://img.shields.io/badge/versão-3.1.0-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
+[![Versão](https://img.shields.io/badge/versão-3.2.0-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Linux](https://img.shields.io/badge/Linux-SANE-fcc624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Licença MIT](https://img.shields.io/badge/licença-MIT-6ccb5f?style=for-the-badge)](LICENSE)
@@ -17,7 +17,7 @@
 
 </div>
 
-> 🇬🇧 **English summary:** *Digitalizar* is a free, portable scanning app for Windows (WIA) and Linux (SANE). Scan to JPEG, PNG or PDF, copy the image right after scanning, and crop, rotate or fix it in a built-in quick editor. No installation needed. Open source under the MIT license.
+> 🇬🇧 **English summary:** *Digitalizar* is a free, portable scanning app for Windows (WIA) and Linux (SANE). Scan to JPEG, PNG or PDF, copy the image right after scanning, and crop, rotate or fix it in a built-in quick editor. Available in 15 languages (it starts in your system language) and remembers all your settings. No installation needed. Open source under the MIT license.
 
 ---
 
@@ -41,6 +41,8 @@ Com o tempo ele ganhou um editor rápido para corrigir a imagem, visual moderno 
 | ✂️ **Edição rápida** | Recortar, girar, brilho, contraste, níveis, curvas e limiar, com pré-visualização ao vivo |
 | ↗️ **Compartilhar** | Abre a janela de compartilhamento do Windows |
 | 🌗 **Tema claro, escuro ou do sistema** | Mais 10 cores de destaque (ou a cor do próprio Windows) |
+| 🌍 **15 idiomas** | Abre no idioma do sistema; português (Brasil e Portugal), inglês, espanhol e mais 10 nas Opções |
+| 💾 **Lembra tudo** | Idioma, tema, cor, scanner, tamanho, formato, resolução, pasta, painel e janela ficam guardados |
 | 🎒 **Portátil** | Um único arquivo, sem instalação |
 
 ## ⬇️ Download
@@ -49,8 +51,8 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 
 | Sistema | Arquivo | Como usar |
 |---|---|---|
-| 🪟 **Windows 10/11** | [`Digitalizar-3.1.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.1.0/Digitalizar-3.1.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
-| 🐧 **Linux** | [`Digitalizar-3.1.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.1.0/Digitalizar-3.1.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
+| 🪟 **Windows 10/11** | [`Digitalizar-3.2.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.2.0/Digitalizar-3.2.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
+| 🐧 **Linux** | [`Digitalizar-3.2.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.2.0/Digitalizar-3.2.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
 
 > [!WARNING]
 > **Na primeira vez, o Windows pode mostrar um aviso azul ("O Windows protegeu o computador").** Isso acontece com todo programa sem assinatura digital paga. Clique em **Mais informações → Executar assim mesmo**. O código está todo aqui, aberto, para quem quiser conferir.
@@ -63,13 +65,13 @@ Você precisa do **Mono** (para rodar o programa) e do **SANE** (para falar com 
 sudo apt install mono-complete sane-utils    # Debian / Ubuntu / Mint
 sudo apt install hplip                       # se o scanner for HP (ex.: DeskJet 2700)
 
-tar -xzf Digitalizar-3.1.0-linux.tar.gz
+tar -xzf Digitalizar-3.2.0-linux.tar.gz
 cd Digitalizar
 ./digitalizar.sh                             # abre o programa
 ./instalar-atalho.sh                         # (opcional) cria o atalho no menu
 ```
 
-> As versões **1.0 e 2.x são só para Windows**. A versão para **Linux** existe a partir da **3.1**.
+> As versões **1.0 e 2.x são só para Windows**. A versão para **Linux** existe a partir da **3.1** (a mais recente é a **3.2**).
 
 ## 📖 Como funciona, passo a passo
 
@@ -124,7 +126,12 @@ Para trocar a pasta de destino, clique no card **Salvar arquivo em**; o link **P
 </p>
 
 - **☰** recolhe e expande o painel lateral, com uma animação suave. Recolhido, sobra mais espaço para a imagem e fica só o botão de digitalizar.
-- **⚙ Opções:** tema **claro**, **escuro** ou **do Windows**, e a **cor de destaque**. A mudança aparece na hora e fica guardada.
+- **⚙ Opções:**
+  - **Idioma:** na primeira vez, o programa abre no idioma do sistema. Nas Opções dá para escolher outro: no topo da lista ficam Português (Brasil), Português (Portugal), English (US e UK) e Español; depois de um traço vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文. O novo idioma vale ao reiniciar (há um botão **Reiniciar agora**).
+  - **Tema:** claro, escuro ou do Windows. Muda na hora.
+  - **Cor de destaque:** 10 cores ou a cor do Windows. Muda na hora.
+
+> 💾 **Tudo o que você escolhe fica guardado:** idioma, tema, cor, scanner, tamanho do documento, tipo de arquivo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela e o valor do Recorte rápido. Os padrões (A4, JPEG, Preto e branco, 300 DPI) só valem na primeira vez que o programa é aberto.
 
 <p>
 <img src="docs/screenshots/08-opcoes.png" width="340" alt="Opções">
@@ -148,8 +155,8 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 
 ## 🕰️ Histórico de versões
 
-### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!"
-**Release: [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
+### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua"
+**Releases: [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) (mais recente) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
 
@@ -167,6 +174,13 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 - Atalho **F1** para abrir o Sobre.
 - O nome do autor aparece nas propriedades do `.exe` (botão direito → Propriedades → Detalhes).
 - 🐧 **Estreia no Linux!** O mesmo programa roda com o Mono e usa o SANE para falar com o scanner. As diferenças: usa a barra de título do próprio Linux, e o "Compartilhar" abre a pasta do arquivo.
+
+**O que a 3.2 acrescentou:** 🌍
+- **15 idiomas.** O programa abre no idioma do sistema (ou em inglês, se o idioma do sistema não estiver na lista), e dá para trocar nas Opções. Os principais ficam no topo: Português (Brasil), Português (Portugal), English (US), English (UK) e Español. Depois vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文 (simplificado).
+- **O programa lembra de tudo:** idioma, tema, cor, scanner, tamanho, tipo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela (inclusive maximizada) e o valor do Recorte rápido.
+- Nas Opções, o tema "do sistema" aparece com o nome certo no Linux.
+
+> Por que **3.2** e não 4.0? Pelo [Versionamento Semântico](https://semver.org/lang/pt-BR/), um recurso novo que não quebra nada do que já existia aumenta o número do meio (*minor*). O 4.0 fica para uma mudança realmente grande.
 
 ### 🖌️ Versão 2.x: "Agora dá para editar" + "Ajustes finos"
 **Release: [v2.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v2.1.0)** · 🪟 Windows
@@ -209,7 +223,7 @@ No Linux, compile com o Mono:
 ```bash
 cd src
 mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
-    -resource:Digitalizar.ico,Digitalizar.ico \
+    -resource:Digitalizar.ico,Digitalizar.ico -resource:idiomas.tsv,idiomas.tsv \
     $(for t in 16 20 24 32 40 48 64; do echo -n "-resource:icones/Digitalizar_$t.png,ico_$t.png "; done) \
     -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:Microsoft.CSharp.dll -r:System.Core.dll -r:System.dll *.cs
 ```
@@ -221,10 +235,11 @@ mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
 | `src/Comum.cs` | Scanner (WIA no Windows, SANE no Linux), processamento de imagem e gerador de PDF |
 | `src/Controles.cs` | Controles próprios: seletores, botões, sliders, switch, editor de curvas |
 | `src/Moldura.cs` | Barra de título integrada |
-| `src/Tema.cs` | Temas, cores de destaque e configurações |
+| `src/Tema.cs` | Temas, cores de destaque e preferências guardadas (`config.ini`) |
+| `src/Idioma.cs` · `src/idiomas.tsv` | Sistema de idiomas e as traduções (uma coluna por idioma) |
 | `src/Opcoes.cs` · `src/Sobre.cs` | Janelas de Opções e Sobre |
 
-Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`), então dá para ver o código de qualquer uma delas.
+Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`, `v3.2.0`), então dá para ver o código de qualquer uma delas.
 
 ## 🤝 Código aberto: contribua!
 

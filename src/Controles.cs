@@ -61,6 +61,12 @@ namespace Digitalizar
         }
 
         protected override void OnRenderItemCheck(ToolStripItemImageRenderEventArgs e) { }
+
+        protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
+        {
+            using (var b = new SolidBrush(Tema.CARD)) e.Graphics.FillRectangle(b, 0, 0, e.Item.Width, e.Item.Height);
+            using (var p = new Pen(Tema.BORDA)) e.Graphics.DrawLine(p, Tema.S(12), e.Item.Height / 2, e.Item.Width - Tema.S(12), e.Item.Height / 2);
+        }
     }
 
     // ---------------------------------------------------------------- seletor (card clicável)
@@ -176,12 +182,14 @@ namespace Digitalizar
             };
             for (int i = 0; i < itens.Length; i++)
             {
+                if (itens[i] == "-") { m.Items.Add(new ToolStripSeparator()); continue; }
                 int k = i;
                 var it = new ToolStripMenuItem(itens[i]) { Checked = i == indice, AutoSize = false };
                 it.Size = new Size(Width - Tema.S(4), Tema.S(36));
                 it.Click += (s, e) => Indice = k;
                 m.Items.Add(it);
             }
+            m.MaximumSize = new Size(Width + Tema.S(20), Tema.S(460));
             m.Closed += (s, e) => { hover = false; Invalidate(); };
             m.Show(this, new Point(0, Height - Tema.S(2)));
         }

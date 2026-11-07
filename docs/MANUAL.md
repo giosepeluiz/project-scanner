@@ -1,6 +1,6 @@
 # 📘 Manual do Digitalizar
 
-Guia completo de todas as funções da versão **3.1**. Para começar rápido, veja o [README](../README.md).
+Guia completo de todas as funções da versão **3.2**. Para começar rápido, veja o [README](../README.md).
 
 ## Índice
 1. [Instalação](#1-instalação)
@@ -18,7 +18,7 @@ Guia completo de todas as funções da versão **3.1**. Para começar rápido, v
 ## 1. Instalação
 
 ### Windows 10 / 11
-1. Baixe o `Digitalizar-3.1.0-windows.zip` em [Releases](https://github.com/giosepeluiz/project-scanner/releases/latest).
+1. Baixe o `Digitalizar-3.2.0-windows.zip` em [Releases](https://github.com/giosepeluiz/project-scanner/releases/latest).
 2. Descompacte onde quiser (pode ser num pendrive).
 3. Abra o `Digitalizar.exe`.
 
@@ -28,7 +28,7 @@ Não é preciso instalar nada: o programa usa o .NET Framework, que já vem no W
 ```bash
 sudo apt install mono-complete sane-utils   # requisitos (Debian/Ubuntu/Mint)
 sudo apt install hplip                      # drivers HP, se for o caso
-tar -xzf Digitalizar-3.1.0-linux.tar.gz && cd Digitalizar
+tar -xzf Digitalizar-3.2.0-linux.tar.gz && cd Digitalizar
 ./digitalizar.sh                            # abre o programa
 ./instalar-atalho.sh                        # cria o atalho no menu (opcional)
 ```
@@ -172,10 +172,14 @@ Ligue **Ativar limiar** para converter em preto e branco puro e ajuste o ponto d
 
 ![Opções](screenshots/08-opcoes.png)
 
+- **Idioma:** na primeira vez, o programa usa o idioma do sistema (ou inglês, se o idioma do sistema não estiver disponível). Escolha outro na lista. Os principais aparecem primeiro: Português (Brasil), Português (Portugal), English (US), English (UK) e Español. Depois de um traço vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文. Para aplicar, clique em **Reiniciar agora**. A opção **Idioma do sistema** volta a seguir o idioma do Windows ou do Linux.
 - **Tema:** Claro, Escuro ou *Usar o tema do Windows*. Este último muda sozinho quando o Windows muda.
 - **Cor de destaque:** 10 cores ou a cor de destaque do Windows (círculo com o ícone de sistema). O tom é ajustado automaticamente para o modo claro ou escuro.
 
 ![Tema claro](screenshots/04-tema-claro.png)
+
+### O que fica guardado
+Tudo o que você escolhe é lembrado na próxima vez: idioma, tema, cor de destaque, scanner, tamanho do documento, tipo de arquivo, modo de cor, resolução, pasta de destino, painel recolhido ou expandido, tamanho e posição da janela (e se estava maximizada) e o valor do Recorte rápido. Os valores de fábrica (A4, JPEG, Preto e branco, 300 DPI) só são usados na primeira vez.
 
 As escolhas ficam guardadas em:
 - Windows: `%APPDATA%\Digitalizar\config.ini`

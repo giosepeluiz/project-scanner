@@ -42,9 +42,9 @@ namespace Digitalizar
             public Tamanho(string n, double l, double a) { Nome = n; L = l; A = a; }
             public override string ToString()
             {
-                if (L <= 0) return Nome;
+                if (L <= 0) return Digitalizar.L.T(Nome);
                 var inv = System.Globalization.CultureInfo.InvariantCulture;
-                return Nome + " (" + L.ToString("0.##", inv) + " × " + A.ToString("0.##", inv) + " cm)";
+                return Digitalizar.L.T(Nome) + " (" + L.ToString("0.##", inv) + " × " + A.ToString("0.##", inv) + " cm)";
             }
         }
         public static readonly Tamanho[] Tamanhos =
@@ -90,7 +90,7 @@ namespace Digitalizar
         static dynamic NovoGerenciador()
         {
             Type t = Type.GetTypeFromProgID("WIA.DeviceManager");
-            if (t == null) throw new Exception("O serviço WIA do Windows não está disponível.");
+            if (t == null) throw new Exception(L.T("O serviço WIA do Windows não está disponível."));
             return Activator.CreateInstance(t);
         }
 
@@ -172,7 +172,7 @@ namespace Digitalizar
                 if ((string)info.DeviceID == deviceId) { dispositivo = info.Connect(); break; }
             }
             if (dispositivo == null)
-                throw new Exception("Scanner não encontrado. Verifique se está ligado e clique em 'Detectar'.");
+                throw new Exception(L.T("Scanner não encontrado. Verifique se está ligado e clique em 'Detectar'."));
 
             Definir(dispositivo.Properties, PROP_DOC_HANDLING, 2);
 
@@ -233,13 +233,13 @@ namespace Digitalizar
 
         static readonly Dictionary<uint, string> Erros = new Dictionary<uint, string>
         {
-            { 0x80210006, "O scanner está ocupado. Aguarde e tente de novo." },
-            { 0x80210005, "O scanner está desligado ou desconectado." },
-            { 0x80210001, "Erro geral do scanner." },
-            { 0x8021000C, "O scanner está em modo de aviso (tampa aberta?)." },
-            { 0x80210015, "Nenhum scanner encontrado." },
-            { 0x80210064, "Digitalização cancelada." },
-            { 0x80210009, "O scanner está ocupado por outro programa." },
+            { 0x80210006, L.T("O scanner está ocupado. Aguarde e tente de novo.") },
+            { 0x80210005, L.T("O scanner está desligado ou desconectado.") },
+            { 0x80210001, L.T("Erro geral do scanner.") },
+            { 0x8021000C, L.T("O scanner está em modo de aviso (tampa aberta?).") },
+            { 0x80210015, L.T("Nenhum scanner encontrado.") },
+            { 0x80210064, L.T("Digitalização cancelada.") },
+            { 0x80210009, L.T("O scanner está ocupado por outro programa.") },
         };
 
         public static string MensagemErro(Exception e)
@@ -251,7 +251,7 @@ namespace Digitalizar
                 uint c = unchecked((uint)com.ErrorCode);
                 string m;
                 if (Erros.TryGetValue(c, out m)) return m;
-                return "Erro do scanner (código 0x" + c.ToString("X8") + ").";
+                return L.F("Erro do scanner (código {0}).", "0x" + c.ToString("X8"));
             }
             return e.Message;
         }
@@ -268,7 +268,7 @@ namespace Digitalizar
             };
             Process p;
             try { p = Process.Start(psi); }
-            catch { throw new Exception("O 'scanimage' não foi encontrado. Instale o SANE: sudo apt install sane-utils"); }
+            catch { throw new Exception(L.T("O 'scanimage' não foi encontrado. Instale o SANE:") + " sudo apt install sane-utils"); }
             string texto = null;
             var tErr = new Thread(() => { texto = p.StandardError.ReadToEnd(); });
             tErr.Start();
@@ -281,7 +281,7 @@ namespace Digitalizar
             if (p.ExitCode != 0)
             {
                 string msg = erros.Trim();
-                throw new Exception(msg.Length > 0 ? "scanimage: " + msg : "Falha ao comunicar com o scanner (código " + p.ExitCode + ").");
+                throw new Exception(msg.Length > 0 ? "scanimage: " + msg : L.F("Falha ao comunicar com o scanner (código {0}).", p.ExitCode));
             }
             return saida;
         }
@@ -311,7 +311,7 @@ namespace Digitalizar
             var ms = new MemoryStream();
             string err;
             Executar(args, ms, out err);
-            if (ms.Length == 0) throw new Exception("O scanner não devolveu nenhuma imagem.");
+            if (ms.Length == 0) throw new Exception(L.T("O scanner não devolveu nenhuma imagem."));
             ms.Position = 0;
             Bitmap bmp;
             using (var original = new Bitmap(ms)) bmp = Imagens.Para24bpp(original);

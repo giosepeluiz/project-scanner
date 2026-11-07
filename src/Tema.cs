@@ -23,6 +23,67 @@ namespace Digitalizar
         }
     }
 
+    // ---------------------------------------------------------------- preferências guardadas (config.ini)
+    static class Prefs
+    {
+        static readonly SortedDictionary<string, string> valores = new SortedDictionary<string, string>();
+
+        public static string Arquivo
+        {
+            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Digitalizar", "config.ini"); }
+        }
+
+        public static void Carregar()
+        {
+            try
+            {
+                if (!File.Exists(Arquivo)) return;
+                foreach (var l in File.ReadAllLines(Arquivo))
+                {
+                    int i = l.IndexOf('=');
+                    if (i <= 0 || l.StartsWith("#")) continue;
+                    valores[l.Substring(0, i).Trim()] = l.Substring(i + 1).Trim();
+                }
+            }
+            catch { }
+        }
+
+        public static string Obter(string chave, string padrao)
+        {
+            string v;
+            return valores.TryGetValue(chave, out v) && v.Length > 0 ? v : padrao;
+        }
+
+        public static int ObterInt(string chave, int padrao)
+        {
+            int v;
+            return int.TryParse(Obter(chave, ""), out v) ? v : padrao;
+        }
+
+        public static void Definir(string chave, string valor)
+        {
+            valor = (valor ?? "").Replace("\r", " ").Replace("\n", " ");
+            string atual;
+            if (valores.TryGetValue(chave, out atual) && atual == valor) return;
+            valores[chave] = valor;
+            Guardar();
+        }
+
+        public static void Definir(string chave, int valor) { Definir(chave, valor.ToString()); }
+
+        static void Guardar()
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(Arquivo));
+                var linhas = new List<string> { "# Configurações do Digitalizar (gerado automaticamente)" };
+                foreach (var kv in valores) linhas.Add(kv.Key + "=" + kv.Value);
+                File.WriteAllLines(Arquivo, linhas.ToArray());
+            }
+            catch { }
+        }
+    }
+
     static class Tema
     {
         // ---------------------------------------------------- paleta atual
@@ -153,26 +214,11 @@ namespace Digitalizar
         public static string ModoTema = "escuro";      // claro | escuro | sistema
         public static string Destaque = "azul";        // id da paleta | sistema
 
-        static string ArquivoConfig
-        {
-            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Digitalizar", "config.ini"); }
-        }
-
         public static void Carregar()
         {
-            try
-            {
-                if (File.Exists(ArquivoConfig))
-                    foreach (var l in File.ReadAllLines(ArquivoConfig))
-                    {
-                        int i = l.IndexOf('=');
-                        if (i < 0) continue;
-                        string k = l.Substring(0, i).Trim(), v = l.Substring(i + 1).Trim();
-                        if (k == "tema") ModoTema = v;
-                        else if (k == "destaque") Destaque = v;
-                    }
-            }
-            catch { }
+            Prefs.Carregar();
+            ModoTema = Prefs.Obter("tema", "escuro");
+            Destaque = Prefs.Obter("destaque", "azul");
             Calcular();
             SystemEvents.UserPreferenceChanged += (s, e) =>
             {
@@ -183,12 +229,8 @@ namespace Digitalizar
 
         public static void Guardar()
         {
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(ArquivoConfig));
-                File.WriteAllLines(ArquivoConfig, new[] { "tema=" + ModoTema, "destaque=" + Destaque });
-            }
-            catch { }
+            Prefs.Definir("tema", ModoTema);
+            Prefs.Definir("destaque", Destaque);
         }
 
         public static void Definir(string modo, string destaque)

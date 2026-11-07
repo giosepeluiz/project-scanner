@@ -221,7 +221,7 @@ namespace Digitalizar
             dpi = (int)Math.Round(img.HorizontalResolution);
             if (dpi < 30) dpi = 300;
 
-            Text = "Edição rápida – " + Path.GetFileName(arquivo);
+            Text = L.T("Edição rápida") + " – " + Path.GetFileName(arquivo);
             Barra.Titulo = Text;
             Font = Tema.Fonte(10f);
             Size = new Size(S(1260), S(880));
@@ -283,33 +283,33 @@ namespace Digitalizar
             y = S(6);
 
             // Girar
-            Secao("Girar");
-            dlGirar = Desl("Ângulo", -180, 180, 0, v => Sinal(v) + "°");
+            Secao(L.T("Girar"));
+            dlGirar = Desl(L.T("Ângulo"), -180, 180, 0, v => Sinal(v) + "°");
             dlGirar.Encaixe = v => { int r = (int)Math.Round(v / 45.0) * 45; return Math.Abs(v - r) <= 4 ? r : v; };
             var b90a = Btn("↺  90°", false, S(18), S(169));
             b90a.Click += (s, e) => dlGirar.Valor = Normalizar(dlGirar.Valor - 90);
             var b90h = Btn("↻  90°", false, S(195), S(169));
             b90h.Click += (s, e) => dlGirar.Valor = Normalizar(dlGirar.Valor + 90);
             y += b90a.Height + S(4);
-            Dica("Encaixa automaticamente a cada 45°. Duplo clique repõe.");
+            Dica(L.T("Encaixa automaticamente a cada 45°. Duplo clique repõe."));
 
             // Recortar
-            Secao("Recortar");
-            btnRecortar = Btn("✂  Recortar", false, S(18), S(169));
+            Secao(L.T("Recortar"));
+            btnRecortar = Btn("✂  " + L.T("Recortar"), false, S(18), S(169));
             btnRecortar.Click += (s, e) => AlternarRecorte();
-            btnSemRecorte = Btn("Remover recorte", false, S(195), S(169));
+            btnSemRecorte = Btn(L.T("Remover recorte"), false, S(195), S(169));
             btnSemRecorte.Click += (s, e) => { tela.Recorte = tela.ModoRecorte ? new RectangleF(0, 0, 1, 1) : RectangleF.Empty; alterado = true; };
             y += btnRecortar.Height + S(4);
-            Dica("Arraste na imagem para marcar a área. Enter conclui.");
+            Dica(L.T("Arraste na imagem para marcar a área. Enter conclui."));
 
-            swRapido = new Interruptor("Recorte rápido") { Left = S(18), Top = y };
+            swRapido = new Interruptor(L.T("Recorte rápido")) { Left = S(18), Top = y };
             lat.Controls.Add(swRapido);
             y += swRapido.Height + S(6);
 
             painelRapido = new Panel { Left = S(18), Top = y, Width = S(346), Height = S(76), BackColor = Tema.BG, Visible = false };
             painelRapido.Controls.Add(new Label
             {
-                Text = "Cortar em todas as bordas:", ForeColor = Tema.TXT2, Font = Tema.Fonte(9f), BackColor = Tema.BG,
+                Text = L.T("Cortar em todas as bordas:"), ForeColor = Tema.TXT2, Font = Tema.Fonte(9f), BackColor = Tema.BG,
                 Left = 0, Top = S(2), AutoSize = true
             });
             var caixa = new Panel { Left = 0, Top = S(26), Width = S(96), Height = S(38), BackColor = Tema.ENTRADA };
@@ -321,7 +321,7 @@ namespace Digitalizar
             };
             txtPx = new TextBox
             {
-                Text = "3", BorderStyle = BorderStyle.None, BackColor = Tema.ENTRADA, ForeColor = Tema.TXT,
+                Text = Prefs.ObterInt("recorte_rapido_px", 3).ToString(), BorderStyle = BorderStyle.None, BackColor = Tema.ENTRADA, ForeColor = Tema.TXT,
                 Font = Tema.Fonte(11f), Left = S(10), Top = S(8), Width = S(50), TextAlign = HorizontalAlignment.Right, MaxLength = 4
             };
             txtPx.KeyPress += (s2, e2) => { if (!char.IsDigit(e2.KeyChar) && !char.IsControl(e2.KeyChar)) e2.Handled = true; };
@@ -331,50 +331,50 @@ namespace Digitalizar
             caixa.Controls.Add(txtPx);
             caixa.Controls.Add(new Label { Text = "px", ForeColor = Tema.TXT2, BackColor = Tema.ENTRADA, Font = Tema.Fonte(10f), Left = S(64), Top = S(9), AutoSize = true });
             painelRapido.Controls.Add(caixa);
-            var bAplicar = new Botao("Aplicar", true) { Left = S(108), Top = S(26), Width = S(110) };
+            var bAplicar = new Botao(L.T("Aplicar"), true) { Left = S(108), Top = S(26), Width = S(110) };
             bAplicar.Click += (s2, e2) => RecorteRapido();
             painelRapido.Controls.Add(bAplicar);
             lat.Controls.Add(painelRapido);
             swRapido.Alterado += (s2, e2) => MostrarRapido(swRapido.Ligado);
 
             // Luz
-            Secao("Luz");
-            dlBrilho = Desl("Brilho", -100, 100, 0, Sinal);
-            dlContraste = Desl("Contraste", -100, 100, 0, Sinal);
+            Secao(L.T("Luz"));
+            dlBrilho = Desl(L.T("Brilho"), -100, 100, 0, Sinal);
+            dlContraste = Desl(L.T("Contraste"), -100, 100, 0, Sinal);
 
             // Níveis
-            Secao("Níveis");
-            dlInPreto = Desl("Entrada – preto", 0, 254, 0, null);
-            dlInBranco = Desl("Entrada – branco", 1, 255, 255, null);
-            dlGama = Desl("Tons médios (gama)", 10, 300, 100, v => (v / 100.0).ToString("0.00", INV));
-            dlOutPreto = Desl("Saída – preto", 0, 255, 0, null);
-            dlOutBranco = Desl("Saída – branco", 0, 255, 255, null);
+            Secao(L.T("Níveis"));
+            dlInPreto = Desl(L.T("Entrada – preto"), 0, 254, 0, null);
+            dlInBranco = Desl(L.T("Entrada – branco"), 1, 255, 255, null);
+            dlGama = Desl(L.T("Tons médios (gama)"), 10, 300, 100, v => (v / 100.0).ToString("0.00", INV));
+            dlOutPreto = Desl(L.T("Saída – preto"), 0, 255, 0, null);
+            dlOutBranco = Desl(L.T("Saída – branco"), 0, 255, 255, null);
 
             // Curvas
-            Secao("Curvas");
+            Secao(L.T("Curvas"));
             curva = new CurvaEditor { Left = S(18), Top = y, Width = S(346), Height = S(346), Histograma = Imagens.Histograma(proxy) };
             curva.Alterado += (s, e) => Mudou();
             lat.Controls.Add(curva);
             y += curva.Height + S(8);
-            Dica("Clique para adicionar ponto e arraste. Botão direito remove.");
-            var bCurva = Btn("Repor curva", false, S(18), S(169));
+            Dica(L.T("Clique para adicionar ponto e arraste. Botão direito remove."));
+            var bCurva = Btn(L.T("Repor curva"), false, S(18), S(169));
             bCurva.Click += (s, e) => curva.Repor(true);
             y += bCurva.Height + S(4);
 
             // Limiar
-            Secao("Limiar");
-            chkLimiar = new Interruptor("Ativar limiar (só preto e branco)") { Left = S(18), Top = y };
+            Secao(L.T("Limiar"));
+            chkLimiar = new Interruptor(L.T("Ativar limiar (só preto e branco)")) { Left = S(18), Top = y };
             chkLimiar.Alterado += (s, e) => { dlLimiar.Enabled = chkLimiar.Ligado; Mudou(); };
             lat.Controls.Add(chkLimiar);
             y += S(36);
-            dlLimiar = Desl("Limiar", 1, 254, 128, null);
+            dlLimiar = Desl(L.T("Limiar"), 1, 254, 128, null);
             dlLimiar.Enabled = false;
 
             y += S(16);
             lat.Controls.Add(new Label { Left = 0, Top = y, Height = 1, Width = 1 });
 
             // Rodapé
-            var bRepor = new Botao("Repor tudo", false) { Left = S(18), Top = S(14) };
+            var bRepor = new Botao(L.T("Repor tudo"), false) { Left = S(18), Top = S(14) };
             bRepor.Click += (s, e) => ReporTudo();
             rodape.Controls.Add(bRepor);
 
@@ -383,9 +383,9 @@ namespace Digitalizar
                 Dock = DockStyle.Right, FlowDirection = FlowDirection.RightToLeft, BackColor = Tema.BG,
                 Width = S(560), Padding = new Padding(0, S(14), S(12), 0), WrapContents = false
             };
-            var bSalvar = new Botao("Salvar", true) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
-            var bComo = new Botao("Salvar como…", false) { Width = S(150), Margin = new Padding(S(8), 0, 0, 0) };
-            var bCancelar = new Botao("Cancelar", false) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
+            var bSalvar = new Botao(L.T("Salvar"), true) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
+            var bComo = new Botao(L.T("Salvar como…"), false) { Width = S(150), Margin = new Padding(S(8), 0, 0, 0) };
+            var bCancelar = new Botao(L.T("Cancelar"), false) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
             bSalvar.Click += (s, e) => Salvar(arquivo);
             bComo.Click += (s, e) => SalvarComo();
             bCancelar.Click += (s, e) => Close();
@@ -418,7 +418,7 @@ namespace Digitalizar
             {
                 if (tela.Recorte.IsEmpty) tela.Recorte = new RectangleF(0, 0, 1, 1);
                 tela.ModoRecorte = true;
-                btnRecortar.Text = "✓  Concluir";
+                btnRecortar.Text = "✓  " + L.T("Concluir");
                 btnRecortar.Primario = true;
             }
             else
@@ -426,7 +426,7 @@ namespace Digitalizar
                 var r = tela.Recorte;
                 if (r.X < 0.001f && r.Y < 0.001f && r.Right > 0.999f && r.Bottom > 0.999f) tela.Recorte = RectangleF.Empty;
                 tela.ModoRecorte = false;
-                btnRecortar.Text = "✂  Recortar";
+                btnRecortar.Text = "✂  " + L.T("Recortar");
                 btnRecortar.Primario = false;
             }
             btnRecortar.Invalidate();
@@ -448,9 +448,10 @@ namespace Digitalizar
         void RecorteRapido()
         {
             int px;
+            if (int.TryParse(txtPx.Text, out px) && px >= 0) Prefs.Definir("recorte_rapido_px", px);
             if (!int.TryParse(txtPx.Text, out px) || px < 0)
             {
-                MessageBox.Show(this, "Digite um número de pixels válido.", "Recorte rápido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, L.T("Digite um número de pixels válido."), L.T("Recorte rápido"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             // tamanho real (resolução original) da imagem já girada
@@ -460,7 +461,7 @@ namespace Digitalizar
             float dx = (float)(px / w), dy = (float)(px / h);
             if (r.Width - 2 * dx < 0.02f || r.Height - 2 * dy < 0.02f)
             {
-                MessageBox.Show(this, "O corte é maior que a imagem.", "Recorte rápido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, L.T("O corte é maior que a imagem."), L.T("Recorte rápido"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             tela.Recorte = new RectangleF(r.X + dx, r.Y + dy, r.Width - 2 * dx, r.Height - 2 * dy);
@@ -547,7 +548,7 @@ namespace Digitalizar
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Não foi possível salvar:\n" + ex.Message, "Edição rápida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, L.T("Não foi possível salvar:") + "\n" + ex.Message, L.T("Edição rápida"), MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally { Cursor = Cursors.Default; }
         }
@@ -556,7 +557,7 @@ namespace Digitalizar
         {
             using (var d = new SaveFileDialog())
             {
-                d.Title = "Salvar como";
+                d.Title = L.T("Salvar como");
                 d.Filter = "JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|PDF (*.pdf)|*.pdf";
                 string ext = Path.GetExtension(arquivo).ToLowerInvariant();
                 d.FilterIndex = ext == ".png" ? 2 : ext == ".pdf" ? 3 : 1;
@@ -589,7 +590,7 @@ namespace Digitalizar
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             if (!salvando && alterado &&
-                MessageBox.Show(this, "Descartar as alterações?", "Edição rápida", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                MessageBox.Show(this, L.T("Descartar as alterações?"), L.T("Edição rápida"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 e.Cancel = true;
             base.OnFormClosing(e);
         }

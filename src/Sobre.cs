@@ -15,7 +15,7 @@ namespace Digitalizar
 
         public Sobre()
         {
-            Text = "Sobre o Digitalizar";
+            Text = L.T("Sobre o Digitalizar");
             Barra.Titulo = Text;
             MaximizeBox = false;
             MinimizeBox = false;
@@ -40,24 +40,23 @@ namespace Digitalizar
             };
             corpo.Controls.Add(icone);
             corpo.Controls.Add(Rotulo("Digitalizar", Tema.Fonte(20f, FontStyle.Regular, "Segoe UI Semibold"), Tema.TXT, S(108), y - S(2)));
-            corpo.Controls.Add(Rotulo("Versão " + ver, Tema.Fonte(10f), Tema.TXT2, S(110), y + S(38)));
+            corpo.Controls.Add(Rotulo(L.T("Versão") + " " + ver, Tema.Fonte(10f), Tema.TXT2, S(110), y + S(38)));
             y += S(84);
 
             corpo.Controls.Add(Texto(
-                "Programa de digitalização para Windows e Linux, com edição rápida da imagem (recorte, rotação, brilho, " +
-                "contraste, níveis, curvas e limiar). Funciona como executável portátil, sem instalação.", y, S(66)));
+                L.T("Programa de digitalização para Windows e Linux, com edição rápida da imagem (recorte, rotação, brilho, contraste, níveis, curvas e limiar). Funciona como executável portátil, sem instalação."), y, S(66)));
             y += S(74);
 
             // ---- autoria
             var cartao = Cartao(corpo, y, S(118));
-            cartao.Controls.Add(Rotulo("Criado por", Tema.Fonte(9f), Tema.TXT2, S(16), S(12)));
+            cartao.Controls.Add(Rotulo(L.T("Criado por"), Tema.Fonte(9f), Tema.TXT2, S(16), S(12)));
             cartao.Controls.Add(Rotulo(Autor, Tema.Fonte(13f, FontStyle.Regular, "Segoe UI Semibold"), Tema.TXT, S(16), S(30)));
-            cartao.Controls.Add(Rotulo("Desenvolvido com a ajuda do Anthropic Claude Opus 5.5", Tema.Fonte(9.5f), Tema.TXT2, S(16), S(62)));
-            cartao.Controls.Add(Rotulo("© " + Math.Max(2026, DateTime.Now.Year) + " " + Autor + ". Todos os direitos reservados.", Tema.Fonte(8.5f), Tema.TXT2, S(16), S(88)));
+            cartao.Controls.Add(Rotulo(L.T("Desenvolvido com a ajuda do Anthropic Claude Opus 5.5"), Tema.Fonte(9.5f), Tema.TXT2, S(16), S(62)));
+            cartao.Controls.Add(Rotulo("© " + Math.Max(2026, DateTime.Now.Year) + " " + Autor + ". " + L.T("Todos os direitos reservados."), Tema.Fonte(8.5f), Tema.TXT2, S(16), S(88)));
             y += cartao.Height + S(14);
 
             // ---- redes e contacto
-            corpo.Controls.Add(Rotulo("Redes e contacto", Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), Tema.TXT, S(28), y));
+            corpo.Controls.Add(Rotulo(L.T("Redes e contato"), Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), Tema.TXT, S(28), y));
             y += S(30);
             var redes = Cartao(corpo, y, S(150));
             string[,] links =
@@ -65,7 +64,7 @@ namespace Digitalizar
                 { "Instagram", "instagram.com/giosepeluiz", "https://instagram.com/giosepeluiz" },
                 { "GitHub",    "github.com/giosepeluiz",    "https://github.com/giosepeluiz" },
                 { "Facebook",  "facebook.com/giosepeluiz",  "https://facebook.com/giosepeluiz" },
-                { "E-mail",    "contato@arqueirover.de",    "mailto:contato@arqueirover.de" },
+                { L.T("E-mail"),    "contato@arqueirover.de",    "mailto:contato@arqueirover.de" },
             };
             for (int i = 0; i < links.GetLength(0); i++)
             {
@@ -84,16 +83,16 @@ namespace Digitalizar
             y += redes.Height + S(14);
 
             // ---- informações técnicas
-            corpo.Controls.Add(Rotulo("Informações do software", Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), Tema.TXT, S(28), y));
+            corpo.Controls.Add(Rotulo(L.T("Informações do software"), Tema.Fonte(11f, FontStyle.Bold, "Segoe UI Semibold"), Tema.TXT, S(28), y));
             y += S(30);
             string[,] info =
             {
-                { "Versão", ver + " (compilado em " + compilado.ToString("dd/MM/yyyy") + ")" },
-                { "Plataforma", Config.Windows ? "Windows 10 / 11 · .NET Framework " + Environment.Version : "Linux · Mono " + Environment.Version },
-                { "Sistema", Environment.OSVersion.VersionString + (Environment.Is64BitOperatingSystem ? " · 64 bits" : " · 32 bits") },
-                { "Digitalização", Config.Windows ? "WIA (Windows Image Acquisition)" : "SANE (scanimage)" },
-                { "Formatos", "JPEG, PNG e PDF" },
-                { "Configurações", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Digitalizar") },
+                { L.T("Versão"), L.F("{0} (compilado em {1})", ver, compilado.ToString("dd/MM/yyyy")) },
+                { L.T("Plataforma"), Config.Windows ? "Windows 10 / 11 · .NET Framework " + Environment.Version : "Linux · Mono " + Environment.Version },
+                { L.T("Sistema"), Environment.OSVersion.VersionString + (Environment.Is64BitOperatingSystem ? " · 64 bits" : " · 32 bits") },
+                { L.T("Digitalização"), Config.Windows ? "WIA (Windows Image Acquisition)" : "SANE (scanimage)" },
+                { L.T("Formatos"), L.T("JPEG, PNG e PDF") },
+                { L.T("Configurações"), Path.GetDirectoryName(Prefs.Arquivo) },
             };
             var tec = Cartao(corpo, y, S(12) + info.GetLength(0) * S(28) + S(6));
             for (int i = 0; i < info.GetLength(0); i++)
@@ -107,16 +106,16 @@ namespace Digitalizar
             y += tec.Height + S(18);
 
             // ---- botões
-            var copiar = new Botao("Copiar informações", false, "") { Left = S(28), Top = y };
+            var copiar = new Botao(L.T("Copiar informações"), false, "") { Left = S(28), Top = y };
             copiar.Click += (s, e) =>
             {
-                var txt = "Digitalizar " + ver + Environment.NewLine + "Criado por " + Autor +
-                          " · com a ajuda do Anthropic Claude Opus 5.5" + Environment.NewLine;
+                var txt = "Digitalizar " + ver + Environment.NewLine + L.T("Criado por") + " " + Autor +
+                          " · " + L.T("Desenvolvido com a ajuda do Anthropic Claude Opus 5.5") + Environment.NewLine;
                 for (int i = 0; i < info.GetLength(0); i++) txt += info[i, 0] + ": " + info[i, 1] + Environment.NewLine;
-                try { Clipboard.SetText(txt); copiar.Text = "Copiado ✓"; } catch { }
+                try { Clipboard.SetText(txt); copiar.Text = L.T("Copiado") + " ✓"; } catch { }
             };
             corpo.Controls.Add(copiar);
-            var fechar = new Botao("Fechar", true) { Width = S(120), Top = y };
+            var fechar = new Botao(L.T("Fechar"), true) { Width = S(120), Top = y };
             fechar.Left = S(28) + S(528) - fechar.Width;
             fechar.Click += (s, e) => Close();
             corpo.Controls.Add(fechar);

@@ -14,24 +14,53 @@ namespace Digitalizar
 
         public Opcoes()
         {
-            Text = "Opções";
-            Barra.Titulo = "Opções";
+            Text = L.T("Opções");
+            Barra.Titulo = Text;
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
-            Size = new Size(S(560), S(560));
+            Size = new Size(S(560), S(720));
             MinimumSize = Size;
 
             var corpo = new Panel { Dock = DockStyle.Fill, BackColor = Tema.BG, Padding = new Padding(S(24), S(8), S(24), S(16)) };
             Controls.Add(corpo);
             int y = S(8);
 
+            // ---- idioma
+            corpo.Controls.Add(Titulo(L.T("Idioma"), y)); y += S(34);
+            var selIdioma = new Seletor { Titulo = L.T("Idioma da interface"), Left = S(24), Top = y, Width = S(496) };
+            var nomes = new string[L.Codigos.Length];
+            for (int i = 0; i < nomes.Length; i++) nomes[i] = L.Nome(L.Codigos[i]);
+            selIdioma.Itens = nomes;
+            selIdioma.Indice = Math.Max(0, Array.IndexOf(L.Codigos, L.Escolhido));
+            corpo.Controls.Add(selIdioma);
+            y += selIdioma.Height + S(8);
+            var aviso = new Label
+            {
+                Text = L.T("O novo idioma é aplicado ao reiniciar o programa."), ForeColor = Tema.TXT2, BackColor = Tema.BG,
+                Font = Tema.Fonte(9f), Left = S(24), Top = y + S(10), AutoSize = true, Visible = false
+            };
+            var reiniciar = new Botao(L.T("Reiniciar agora"), true) { Top = y, Visible = false };
+            reiniciar.Left = S(520) - reiniciar.Width;
+            reiniciar.Click += (s, e) => Programa.Reiniciar();
+            corpo.Controls.Add(aviso);
+            corpo.Controls.Add(reiniciar);
+            selIdioma.Alterado += (s, e) =>
+            {
+                string cod = L.Codigos[selIdioma.Indice];
+                if (cod == L.Separador) { selIdioma.Indice = Math.Max(0, Array.IndexOf(L.Codigos, L.Escolhido)); return; }
+                Prefs.Definir("idioma", cod);
+                bool muda = cod != L.Escolhido;
+                aviso.Visible = reiniciar.Visible = muda;
+            };
+            y += S(54);
+
             // ---- tema
-            corpo.Controls.Add(Titulo("Tema", y)); y += S(34);
+            corpo.Controls.Add(Titulo(L.T("Tema"), y)); y += S(34);
             var cartaoTema = new Panel { Left = S(24), Top = y, Width = S(496), Height = S(120), BackColor = Tema.CARD };
             corpo.Controls.Add(cartaoTema);
-            string[,] opcoes = { { "claro", "Claro" }, { "escuro", "Escuro" }, { "sistema", "Usar o tema do Windows" } };
+            string[,] opcoes = { { "claro", L.T("Claro") }, { "escuro", L.T("Escuro") }, { "sistema", L.T(Config.Windows ? "Usar o tema do Windows" : "Usar o tema do sistema") } };
             for (int i = 0; i < 3; i++)
             {
                 string id = opcoes[i, 0];
@@ -43,7 +72,7 @@ namespace Digitalizar
             y += cartaoTema.Height + S(24);
 
             // ---- cor de destaque
-            corpo.Controls.Add(Titulo("Cor de destaque", y)); y += S(34);
+            corpo.Controls.Add(Titulo(L.T("Cor de destaque"), y)); y += S(34);
             var cartaoCor = new Panel { Left = S(24), Top = y, Width = S(496), Height = S(170), BackColor = Tema.CARD };
             corpo.Controls.Add(cartaoCor);
             int col = 0, lin = 0;
@@ -60,22 +89,22 @@ namespace Digitalizar
             foreach (var p in Tema.Paleta)
             {
                 var cd = p;
-                add(new Amostra(cd.Nome) { Cor = () => Tema.Escuro ? cd.Escuro : cd.Claro }, cd.Id);
+                add(new Amostra(L.T(cd.Nome)) { Cor = () => Tema.Escuro ? cd.Escuro : cd.Claro }, cd.Id);
             }
-            add(new Amostra("Cor de destaque do Windows") { Cor = () => Tema.DestaqueSistema(), Sistema = true }, "sistema");
+            add(new Amostra(L.T("Cor de destaque do Windows")) { Cor = () => Tema.DestaqueSistema(), Sistema = true }, "sistema");
             var nota = new Label
             {
-                Text = "O tom é ajustado automaticamente para o modo claro ou escuro.",
+                Text = L.T("O tom é ajustado automaticamente para o modo claro ou escuro."),
                 ForeColor = Tema.TXT2, BackColor = Tema.CARD, Font = Tema.Fonte(8.5f),
                 Left = S(16), Top = S(124), AutoSize = true
             };
             cartaoCor.Controls.Add(nota);
             y += cartaoCor.Height + S(20);
 
-            var fechar = new Botao("Fechar", true) { Width = S(120), Top = y, Left = S(400) };
+            var fechar = new Botao(L.T("Fechar"), true) { Width = S(120), Top = y, Left = S(400) };
             fechar.Click += (s, e) => Close();
             corpo.Controls.Add(fechar);
-            var sobre = new Botao("Sobre o Digitalizar", false, "\uE946") { Top = y, Left = S(24) };
+            var sobre = new Botao(L.T("Sobre o Digitalizar"), false, "\uE946") { Top = y, Left = S(24) };
             sobre.Click += (s, e) => { using (var f = new Sobre()) f.ShowDialog(this); };
             corpo.Controls.Add(sobre);
 

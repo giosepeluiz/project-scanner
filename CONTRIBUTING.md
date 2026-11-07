@@ -14,6 +14,14 @@ Abra uma **[Issue](https://github.com/giosepeluiz/project-scanner/issues)** cont
 
 Abra uma Issue explicando a ideia. Lembre-se da filosofia do projeto: **simples, leve e com o básico bem feito**. Funções que deixam o programa pesado podem ficar de fora.
 
+## 🌍 Quer traduzir ou corrigir uma tradução?
+
+As traduções ficam em **`src/idiomas.tsv`**:
+- a primeira coluna é o texto original em português do Brasil, e cada uma das outras colunas é um idioma (`pt-PT`, `en-US`, `es`…);
+- use **tabulação** entre as colunas e `\n` para quebrar linha; mantenha os `{0}`, `{1}` dos textos que têm valores;
+- uma célula vazia usa o inglês (`en-US`);
+- para um idioma novo, acrescente uma coluna com o código (ex.: `ko`) e o nome em `Idioma.cs` (`Codigos` e `nomes`).
+
 ## 🔧 Quer enviar código?
 
 1. Faça um **fork** do repositório.
@@ -29,7 +37,8 @@ Abra uma Issue explicando a ideia. Lembre-se da filosofia do projeto: **simples,
 
 - **C# 5** (compatível com o `csc.exe` do .NET Framework 4 que vem no Windows): sem interpolação de strings (`$"..."`), sem `?.` e sem `nameof`.
 - Sem dependências externas: só o que já vem com o Windows / Mono.
-- Textos da interface em **português do Brasil**.
+- Textos da interface em **português do Brasil**, sempre passando por `L.T("...")` (ou `L.F` com `{0}`), e com a tradução acrescentada no `idiomas.tsv`.
+- Preferências novas devem ser guardadas com `Prefs.Definir` / `Prefs.Obter`.
 - Cores sempre pela classe `Tema`, para funcionar nos temas claro e escuro.
 - O que for específico de um sistema deve ficar atrás de `Config.Windows`.
 

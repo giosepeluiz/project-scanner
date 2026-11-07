@@ -15,8 +15,8 @@ using System.Windows.Forms;
 [assembly: AssemblyDescription("Digitalização com edição rápida")]
 [assembly: AssemblyCompany("Giosepe Luiz dos Santos")]
 [assembly: AssemblyCopyright("© 2026 Giosepe Luiz dos Santos")]
-[assembly: AssemblyVersion("3.1.0.0")]
-[assembly: AssemblyFileVersion("3.1.0.0")]
+[assembly: AssemblyVersion("3.2.0.0")]
+[assembly: AssemblyFileVersion("3.2.0.0")]
 
 namespace Digitalizar
 {
@@ -34,7 +34,7 @@ namespace Digitalizar
         Panel esquerda, conteudo, compacto;
 
         List<ScannerInfo> scanners = new List<ScannerInfo>();
-        string pasta = Config.PastaPadrao;
+        string pasta = Prefs.Obter("pasta", Config.PastaPadrao);
         Bitmap ultimaImagem;
         string ultimoArquivo;
 
@@ -58,7 +58,13 @@ namespace Digitalizar
             Montar();
             FinalizarBarra();
             anim.Tick += (s, e) => PassoAnimacao();
-            Shown += (s, e) => Detectar();
+            RestaurarJanela();
+            Shown += (s, e) =>
+            {
+                if (Prefs.Obter("painel", "expandido") == "recolhido") RecolherSemAnimacao();
+                Detectar();
+            };
+            FormClosing += (s, e) => GuardarJanela();
         }
 
         Seletor NovoSeletor(Control pai, string titulo, string[] itens, string padrao, ref int y)
@@ -73,13 +79,13 @@ namespace Digitalizar
         void Montar()
         {
             // ---- barra de título: menu à esquerda, opções à direita
-            btnMenu = new BotaoIcone("", "Recolher / expandir painel") { Left = S(6) };
+            btnMenu = new BotaoIcone("", L.T("Recolher / expandir painel")) { Left = S(6) };
             btnMenu.Top = (Barra.Height - btnMenu.Height) / 2;
             btnMenu.Click += (s, e) => AlternarPainel();
             Barra.Controls.Add(btnMenu);
             Barra.InicioTitulo = btnMenu.Right + S(8);
 
-            btnOpcoes = new BotaoIcone("", "Opções");
+            btnOpcoes = new BotaoIcone("", L.T("Opções"));
             btnOpcoes.Click += (s, e) => { using (var o = new Opcoes()) o.ShowDialog(this); };
             Barra.AdicionarDireita(btnOpcoes, 0);
 
@@ -96,29 +102,39 @@ namespace Digitalizar
             Controls.Add(esquerda);
 
             int y = S(8);
-            selScanner = NovoSeletor(conteudo, "Scanner", null, null, ref y);
-            selScanner.LinkTexto = "Detectar";
+            selScanner = NovoSeletor(conteudo, L.T("Scanner"), null, null, ref y);
+            selScanner.LinkTexto = L.T("Detectar");
             selScanner.LinkClicado += (s, e) => Detectar();
+            selScanner.Alterado += (s, e) => { if (selScanner.Indice >= 0 && selScanner.Indice < scanners.Count) Prefs.Definir("scanner", scanners[selScanner.Indice].Nome); };
 
-            selFonte = NovoSeletor(conteudo, "Fonte", Config.Fontes, Config.Fontes[0], ref y);
-            selTamanho = NovoSeletor(conteudo, "Tamanho do documento", Config.Tamanhos.Select(t => t.ToString()).ToArray(),
-                                     Config.Tamanhos[Config.TamanhoPadrao].ToString(), ref y);
-            selTipo = NovoSeletor(conteudo, "Tipo de arquivo", Config.Tipos, Config.TipoPadrao, ref y);
-            selModo = NovoSeletor(conteudo, "Modo de cor", Config.Modos, Config.ModoPadrao, ref y);
-            selDpi = NovoSeletor(conteudo, "Resolução (DPI)", Config.Resolucoes, Config.ResolucaoPadrao, ref y);
+            selFonte = NovoSeletor(conteudo, L.T("Fonte"), Config.Fontes.Select(L.T).ToArray(), null, ref y);
+            selFonte.Indice = 0;
+            selTamanho = NovoSeletor(conteudo, L.T("Tamanho do documento"), Config.Tamanhos.Select(t => t.ToString()).ToArray(),
+                                     null, ref y);
+            selTamanho.Indice = Math.Min(Config.Tamanhos.Length - 1, Math.Max(0, Prefs.ObterInt("tamanho", Config.TamanhoPadrao)));
+            selTipo = NovoSeletor(conteudo, L.T("Tipo de arquivo"), Config.Tipos, Prefs.Obter("tipo", Config.TipoPadrao), ref y);
+            if (selTipo.Indice < 0) selTipo.Selecionar(Config.TipoPadrao);
+            selModo = NovoSeletor(conteudo, L.T("Modo de cor"), Config.Modos.Select(L.T).ToArray(), null, ref y);
+            selModo.Indice = Math.Max(0, Array.IndexOf(Config.Modos, Prefs.Obter("modo", Config.ModoPadrao)));
+            selDpi = NovoSeletor(conteudo, L.T("Resolução (DPI)"), Config.Resolucoes, Prefs.Obter("dpi", Config.ResolucaoPadrao), ref y);
+            if (selDpi.Indice < 0) selDpi.Selecionar(Config.ResolucaoPadrao);
+            selTamanho.Alterado += (s, e) => Prefs.Definir("tamanho", selTamanho.Indice);
+            selTipo.Alterado += (s, e) => Prefs.Definir("tipo", selTipo.Valor);
+            selModo.Alterado += (s, e) => { if (selModo.Indice >= 0) Prefs.Definir("modo", Config.Modos[selModo.Indice]); };
+            selDpi.Alterado += (s, e) => Prefs.Definir("dpi", selDpi.Valor);
 
             selPasta = new Seletor
             {
-                Titulo = "Salvar arquivo em", Seta = false, CorDestaque = true, LinkTexto = "Padrão",
+                Titulo = L.T("Salvar arquivo em"), Seta = false, CorDestaque = true, LinkTexto = L.T("Padrão"),
                 Left = S(16), Top = y, Width = S(378), Height = S(86)
             };
             selPasta.Clicado += (s, e) => EscolherPasta();
-            selPasta.LinkClicado += (s, e) => { pasta = Config.PastaPadrao; AtualizarPasta(); };
+            selPasta.LinkClicado += (s, e) => { pasta = Config.PastaPadrao; Prefs.Definir("pasta", pasta); AtualizarPasta(); };
             conteudo.Controls.Add(selPasta);
             y += selPasta.Height + S(14);
             AtualizarPasta();
 
-            btnScan = new Botao("Digitalizar", true) { Left = S(16), Top = y, Width = S(378), Height = S(40) };
+            btnScan = new Botao(L.T("Digitalizar (ação)"), true) { Left = S(16), Top = y, Width = S(378), Height = S(40) };
             btnScan.Click += (s, e) => IniciarScan();
             conteudo.Controls.Add(btnScan);
             y += btnScan.Height + S(10);
@@ -131,17 +147,17 @@ namespace Digitalizar
             conteudo.Controls.Add(lblStatus);
 
             // ---- painel compacto (barra lateral recolhida)
-            btnScanCompacto = new BotaoIcone(null, "Digitalizar") { Left = S(10), Top = S(8), Size = new Size(S(44), S(44)), Imagem = Tema.IconeBmp(32) };
+            btnScanCompacto = new BotaoIcone(null, L.T("Digitalizar (ação)")) { Left = S(10), Top = S(8), Size = new Size(S(44), S(44)), Imagem = Tema.IconeBmp(32) };
             btnScanCompacto.Click += (s, e) => IniciarScan();
             compacto.Controls.Add(btnScanCompacto);
 
             // ---- lado direito
             var acoes = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = S(52), BackColor = Tema.PREV, Padding = new Padding(0, S(8), 0, 0), WrapContents = false, AutoScroll = false };
-            btnEditar = new Botao("Edição rápida", false, "");
-            btnCopiar = new Botao("Copiar imagem", false, "");
-            btnPartilhar = new Botao("Compartilhar", false, "");
-            btnAbrir = new Botao("Abrir", false, "");
-            btnPasta = new Botao("Abrir pasta", false, "");
+            btnEditar = new Botao(L.T("Edição rápida"), false, "");
+            btnCopiar = new Botao(L.T("Copiar imagem"), false, "");
+            btnPartilhar = new Botao(L.T("Compartilhar"), false, "");
+            btnAbrir = new Botao(L.T("Abrir"), false, "");
+            btnPasta = new Botao(L.T("Abrir pasta"), false, "");
             foreach (var b in new[] { btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta })
             {
                 b.Margin = new Padding(0, 0, S(10), 0);
@@ -165,7 +181,7 @@ namespace Digitalizar
             lblVazio = new Label
             {
                 Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Tema.TXT2, BackColor = Tema.PREV,
-                Text = "A pré-visualização aparece aqui\ndepois de digitalizar.", Font = Tema.Fonte(11f)
+                Text = L.T("A pré-visualização aparece aqui\ndepois de digitalizar."), Font = Tema.Fonte(11f)
             };
             direita.Controls.Add(lblVazio);
             direita.Controls.Add(preview);
@@ -175,9 +191,41 @@ namespace Digitalizar
         }
 
         // ------------------------------------------------ barra lateral recolhível
+        void RecolherSemAnimacao()
+        {
+            expandida = false;
+            esquerda.Width = LARG_COMP;
+            conteudo.Visible = false;
+            compacto.Visible = true;
+        }
+
+        void RestaurarJanela()
+        {
+            var p = Prefs.Obter("janela", "").Split(',');
+            int x, y, w, h;
+            if (p.Length < 5 || !int.TryParse(p[0], out x) || !int.TryParse(p[1], out y) || !int.TryParse(p[2], out w) || !int.TryParse(p[3], out h)) return;
+            var r = new Rectangle(x, y, Math.Max(w, MinimumSize.Width), Math.Max(h, MinimumSize.Height));
+            bool visivel = false;
+            foreach (var sc in Screen.AllScreens) if (sc.WorkingArea.IntersectsWith(r)) visivel = true;
+            if (!visivel) return;
+            StartPosition = FormStartPosition.Manual;
+            Bounds = r;
+            if (p[4] == "max") WindowState = FormWindowState.Maximized;
+        }
+
+        public void GuardarAgora() { GuardarJanela(); }
+
+        void GuardarJanela()
+        {
+            var r = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
+            if (WindowState == FormWindowState.Minimized) return;
+            Prefs.Definir("janela", r.X + "," + r.Y + "," + r.Width + "," + r.Height + "," + (WindowState == FormWindowState.Maximized ? "max" : "normal"));
+        }
+
         void AlternarPainel()
         {
             expandida = !expandida;
+            Prefs.Definir("painel", expandida ? "expandido" : "recolhido");
             larguraDe = esquerda.Width;
             larguraPara = expandida ? LARG_EXP : LARG_COMP;
             inicioAnim = DateTime.Now;
@@ -231,7 +279,7 @@ namespace Digitalizar
 
         void Detectar()
         {
-            Ocupado(true, "Procurando scanners…");
+            Ocupado(true, L.T("Procurando scanners…"));
             EmSegundoPlano(() =>
             {
                 List<ScannerInfo> lista = null; string erro = null;
@@ -248,15 +296,17 @@ namespace Digitalizar
             selScanner.Itens = lista.Select(s => s.Nome).ToArray();
             if (lista.Count > 0)
             {
-                int i = lista.FindIndex(s => s.Nome.ToUpper().Contains("HP") || s.Nome.ToUpper().Contains("DESKJET"));
+                string salvo = Prefs.Obter("scanner", "");
+                int i = lista.FindIndex(s => s.Nome == salvo);
+                if (i < 0) i = lista.FindIndex(s => s.Nome.ToUpper().Contains("HP") || s.Nome.ToUpper().Contains("DESKJET"));
                 selScanner.Indice = -1;
                 selScanner.Indice = i >= 0 ? i : 0;
-                lblStatus.Text = lista.Count + " scanner(s) encontrado(s). Pronto.";
+                lblStatus.Text = L.F("{0} scanner(s) encontrado(s). Pronto.", lista.Count);
             }
             else
             {
                 selScanner.Indice = -1;
-                lblStatus.Text = erro ?? "Nenhum scanner encontrado. Verifique se a impressora está ligada e conectada (Wi-Fi/USB) e clique em 'Detectar'.";
+                lblStatus.Text = erro ?? L.T("Nenhum scanner encontrado. Verifique se a impressora está ligada e conectada (Wi-Fi/USB) e clique em 'Detectar'.");
             }
         }
 
@@ -264,9 +314,9 @@ namespace Digitalizar
         {
             using (var d = new FolderBrowserDialog())
             {
-                d.Description = "Escolher pasta de destino";
+                d.Description = L.T("Escolher pasta de destino");
                 d.SelectedPath = Directory.Exists(pasta) ? pasta : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                if (d.ShowDialog(this) == DialogResult.OK) { pasta = d.SelectedPath; AtualizarPasta(); }
+                if (d.ShowDialog(this) == DialogResult.OK) { pasta = d.SelectedPath; Prefs.Definir("pasta", pasta); AtualizarPasta(); }
             }
         }
 
@@ -275,31 +325,31 @@ namespace Digitalizar
             int idx = selScanner.Indice;
             if (idx < 0 || idx >= scanners.Count)
             {
-                MessageBox.Show(this, "Selecione um scanner (clique em 'Detectar').", "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, L.T("Selecione um scanner (clique em 'Detectar')."), "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             var sc = scanners[idx];
-            string modo = selModo.Valor;
+            string modo = Config.Modos[Math.Max(0, selModo.Indice)];
             int dpi = int.Parse(selDpi.Valor);
             string tipo = selTipo.Valor;
             string destino = pasta;
             var tam = Config.Tamanhos[Math.Max(0, selTamanho.Indice)];
 
             if (dpi >= 1200 && modo == "Cor" &&
-                MessageBox.Show(this, "1200 DPI em cor gera um arquivo muito grande e demora vários minutos. Continuar?",
+                MessageBox.Show(this, L.T("1200 DPI em cor gera um arquivo muito grande e demora vários minutos. Continuar?"),
                     "Digitalizar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
 
             AcoesAtivas(false);
-            Ocupado(true, "Digitalizando (" + tam.Nome + ", " + modo + ", " + dpi + " DPI)…");
+            Ocupado(true, L.F("Digitalizando ({0}, {1}, {2} DPI)…", L.T(tam.Nome), L.T(modo), dpi));
             EmSegundoPlano(() =>
             {
                 try
                 {
                     Bitmap img = Wia.Digitalizar(sc.Id, modo, dpi, tam.L, tam.A);
-                    BeginInvoke((Action)(() => lblStatus.Text = "Salvando…"));
+                    BeginInvoke((Action)(() => lblStatus.Text = L.T("Salvando…")));
                     string caminho = Imagens.Guardar(img, destino, tipo, modo, dpi);
-                    BeginInvoke((Action)(() => Concluido(img, caminho, "Salvo: ")));
+                    BeginInvoke((Action)(() => Concluido(img, caminho, L.T("Salvo:") + " ")));
                 }
                 catch (Exception e)
                 {
@@ -324,7 +374,7 @@ namespace Digitalizar
 
         void Falhou(string msg)
         {
-            Ocupado(false, "Falhou: " + msg);
+            Ocupado(false, L.T("Falhou:") + " " + msg);
             MessageBox.Show(this, msg, "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
@@ -335,15 +385,15 @@ namespace Digitalizar
             using (var ed = new Editor(ultimaImagem, ultimoArquivo))
             {
                 if (ed.ShowDialog(this) == DialogResult.OK && ed.ResultadoImagem != null)
-                    Concluido(ed.ResultadoImagem, ed.ResultadoCaminho, "Editado e salvo: ");
+                    Concluido(ed.ResultadoImagem, ed.ResultadoCaminho, L.T("Editado e salvo:") + " ");
             }
         }
 
         void Copiar()
         {
             if (ultimaImagem == null) return;
-            try { Clipboard.SetImage(ultimaImagem); lblStatus.Text = "Imagem copiada. Cole com Ctrl+V."; }
-            catch (Exception e) { MessageBox.Show(this, e.Message, "Copiar imagem", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            try { Clipboard.SetImage(ultimaImagem); lblStatus.Text = L.T("Imagem copiada. Cole com Ctrl+V."); }
+            catch (Exception e) { MessageBox.Show(this, e.Message, L.T("Copiar imagem"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
         void Partilhar()
@@ -352,14 +402,14 @@ namespace Digitalizar
             if (!Config.Windows)
             {
                 AbrirPasta();
-                lblStatus.Text = "Pasta aberta: arraste o arquivo para onde quiser compartilhar.";
+                lblStatus.Text = L.T("Pasta aberta: arraste o arquivo para onde quiser compartilhar.");
                 return;
             }
             if (!Partilha.Abrir(Handle, ultimoArquivo))
             {
-                MessageBox.Show(this, "Não foi possível abrir a janela de compartilhamento do Windows.\n" +
-                    "O arquivo vai ser mostrado no Explorador: clique nele com o botão direito → Compartilhar.",
-                    "Compartilhar", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, L.T("Não foi possível abrir a janela de compartilhamento do Windows.") + "\n" +
+                    L.T("O arquivo vai ser mostrado no Explorador: clique nele com o botão direito → Compartilhar."),
+                    L.T("Compartilhar"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 AbrirPasta();
             }
         }
@@ -400,6 +450,20 @@ namespace Digitalizar
 
     static class Programa
     {
+        /// Fecha e abre de novo o programa (usado ao trocar de idioma)
+        public static void Reiniciar()
+        {
+            try
+            {
+                foreach (Form f in Application.OpenForms) { var jp = f as Janela; if (jp != null) jp.GuardarAgora(); }
+                string exe = Assembly.GetExecutingAssembly().Location;
+                if (Config.Windows) Process.Start(exe);
+                else Process.Start("mono", "\"" + exe + "\"");
+            }
+            catch { }
+            Environment.Exit(0);
+        }
+
         [DllImport("user32.dll")] static extern bool SetProcessDPIAware();
 
         [STAThread]
@@ -410,6 +474,7 @@ namespace Digitalizar
             Application.SetCompatibleTextRenderingDefault(false);
             using (var g = Graphics.FromHwnd(IntPtr.Zero)) Tema.Escala = g.DpiX / 96f;
             Tema.Carregar();
+            L.Iniciar();
             Application.Run(new Janela());
         }
     }
