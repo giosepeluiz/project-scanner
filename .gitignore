@@ -1,0 +1,13 @@
+# Compilados
+*.exe
+*.pdb
+bin/
+obj/
+
+# Pacotes gerados localmente
+*.zip
+*.tar.gz
+
+# Sistema
+Thumbs.db
+.DS_Store
