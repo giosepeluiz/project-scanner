@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
@@ -17,9 +18,6 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-[assembly: AssemblyTitle("Digitalizar")]
-[assembly: AssemblyProduct("Digitalizar")]
-[assembly: AssemblyVersion("1.0.0.0")]
 
 namespace Digitalizar
 {
@@ -277,6 +275,182 @@ namespace Digitalizar
                 Pdf.Escrever(caminho, b, modo, dpi);
             return caminho;
         }
+
+        // ---------------------------------------------------- edição
+        public static void GuardarEm(Bitmap b, string caminho, int dpi)
+        {
+            string ext = Path.GetExtension(caminho).ToLowerInvariant();
+            b.SetResolution(dpi, dpi);
+            string tmp = caminho + ".tmp";
+            if (ext == ".png") b.Save(tmp, ImageFormat.Png);
+            else if (ext == ".pdf") Pdf.Escrever(tmp, b, EhBinaria(b) ? "Preto e branco" : "Cor", dpi);
+            else File.WriteAllBytes(tmp, Jpeg(b, 92));
+            if (File.Exists(caminho)) File.Delete(caminho);
+            File.Move(tmp, caminho);
+        }
+
+        public static bool EhBinaria(Bitmap b)
+        {
+            BitmapData d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            try
+            {
+                byte[] linha = new byte[d.Stride];
+                int n = b.Width * 3;
+                for (int y = 0; y < b.Height; y++)
+                {
+                    Marshal.Copy(d.Scan0 + y * d.Stride, linha, 0, d.Stride);
+                    for (int i = 0; i < n; i += 3)
+                    {
+                        byte v = linha[i];
+                        if ((v != 0 && v != 255) || linha[i + 1] != v || linha[i + 2] != v) return false;
+                    }
+                }
+                return true;
+            }
+            finally { b.UnlockBits(d); }
+        }
+
+        public static Bitmap Copia24(Bitmap b)
+        {
+            return b.Clone(new Rectangle(0, 0, b.Width, b.Height), PixelFormat.Format24bppRgb);
+        }
+
+        public static Bitmap Reduzir(Bitmap b, int maxLado)
+        {
+            double s = Math.Min(1.0, maxLado / (double)Math.Max(b.Width, b.Height));
+            int w = Math.Max(1, (int)(b.Width * s)), h = Math.Max(1, (int)(b.Height * s));
+            var r = new Bitmap(w, h, PixelFormat.Format24bppRgb);
+            r.SetResolution(b.HorizontalResolution, b.VerticalResolution);
+            using (var g = Graphics.FromImage(r))
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(b, 0, 0, w, h);
+            }
+            return r;
+        }
+
+        public static Bitmap Rotacionar(Bitmap src, int graus)
+        {
+            int a = ((graus % 360) + 360) % 360;
+            Bitmap c = Copia24(src);
+            if (a == 0) return c;
+            if (a == 90) { c.RotateFlip(RotateFlipType.Rotate90FlipNone); return c; }
+            if (a == 180) { c.RotateFlip(RotateFlipType.Rotate180FlipNone); return c; }
+            if (a == 270) { c.RotateFlip(RotateFlipType.Rotate270FlipNone); return c; }
+            c.Dispose();
+
+            int w = src.Width, h = src.Height;
+            double rad = a * Math.PI / 180.0;
+            double cs = Math.Abs(Math.Cos(rad)), sn = Math.Abs(Math.Sin(rad));
+            int nw = (int)Math.Ceiling(w * cs + h * sn), nh = (int)Math.Ceiling(w * sn + h * cs);
+            var r = new Bitmap(nw, nh, PixelFormat.Format24bppRgb);
+            r.SetResolution(src.HorizontalResolution, src.VerticalResolution);
+            using (var g = Graphics.FromImage(r))
+            {
+                g.Clear(Color.White);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.TranslateTransform(nw / 2f, nh / 2f);
+                g.RotateTransform(a);
+                g.TranslateTransform(-w / 2f, -h / 2f);
+                g.DrawImage(src, 0, 0, w, h);
+            }
+            return r;
+        }
+
+        public static Bitmap Recortar(Bitmap b, RectangleF n)
+        {
+            var r = Rectangle.Round(new RectangleF(n.X * b.Width, n.Y * b.Height, n.Width * b.Width, n.Height * b.Height));
+            r.Intersect(new Rectangle(0, 0, b.Width, b.Height));
+            if (r.Width < 1 || r.Height < 1) return Copia24(b);
+            return b.Clone(r, PixelFormat.Format24bppRgb);
+        }
+
+        public static void AplicarTom(Bitmap b, byte[] lut, bool limiar, int valorLimiar)
+        {
+            bool identidade = true;
+            for (int i = 0; i < 256; i++) if (lut[i] != i) { identidade = false; break; }
+            if (identidade && !limiar) return;
+
+            BitmapData d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            try
+            {
+                byte[] linha = new byte[d.Stride];
+                int n = b.Width * 3;
+                for (int y = 0; y < b.Height; y++)
+                {
+                    IntPtr p = d.Scan0 + y * d.Stride;
+                    Marshal.Copy(p, linha, 0, d.Stride);
+                    if (limiar)
+                    {
+                        for (int i = 0; i < n; i += 3)
+                        {
+                            int l = (lut[linha[i + 2]] * 299 + lut[linha[i + 1]] * 587 + lut[linha[i]] * 114) / 1000;
+                            byte v = (byte)(l >= valorLimiar ? 255 : 0);
+                            linha[i] = linha[i + 1] = linha[i + 2] = v;
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < n; i++) linha[i] = lut[linha[i]];
+                    }
+                    Marshal.Copy(linha, 0, p, d.Stride);
+                }
+            }
+            finally { b.UnlockBits(d); }
+        }
+
+        public static int[] Histograma(Bitmap b)
+        {
+            var h = new int[256];
+            BitmapData d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            try
+            {
+                byte[] linha = new byte[d.Stride];
+                int n = b.Width * 3;
+                for (int y = 0; y < b.Height; y++)
+                {
+                    Marshal.Copy(d.Scan0 + y * d.Stride, linha, 0, d.Stride);
+                    for (int i = 0; i < n; i += 3) h[(linha[i + 2] * 299 + linha[i + 1] * 587 + linha[i] * 114) / 1000]++;
+                }
+            }
+            finally { b.UnlockBits(d); }
+            return h;
+        }
+    }
+
+    // ============================================================ Ajustes da edição rápida
+    class Ajustes
+    {
+        public int Angulo, Brilho, Contraste;
+        public int InPreto = 0, InBranco = 255, OutPreto = 0, OutBranco = 255;
+        public double Gama = 1.0;
+        public byte[] Curva;
+        public bool Limiar;
+        public int ValorLimiar = 128;
+        public RectangleF Recorte = RectangleF.Empty;
+
+        static byte B(double v) { return (byte)Math.Max(0, Math.Min(255, Math.Round(v))); }
+
+        public byte[] Lut()
+        {
+            var lut = new byte[256];
+            double c = Contraste * 2.55;
+            double f = (259.0 * (c + 255.0)) / (255.0 * (259.0 - c));
+            int ib = Math.Min(InPreto, 254), iw = Math.Max(InBranco, ib + 1);
+            for (int x = 0; x < 256; x++)
+            {
+                double v = (x - ib) / (double)(iw - ib);
+                v = Math.Max(0, Math.Min(1, v));
+                v = Math.Pow(v, 1.0 / Gama);
+                v = OutPreto + v * (OutBranco - OutPreto);
+                if (Curva != null) v = Curva[B(v)];
+                v = f * (v - 128) + 128 + Brilho * 1.28;
+                lut[x] = B(v);
+            }
+            return lut;
+        }
     }
 
     // ============================================================ PDF (gerador mínimo)
@@ -365,319 +539,4 @@ namespace Digitalizar
         }
     }
 
-    // ============================================================ Interface
-    class Janela : Form
-    {
-        static readonly Color BG = Color.FromArgb(0x1f, 0x1f, 0x1f);
-        static readonly Color CARD = Color.FromArgb(0x2b, 0x2b, 0x2b);
-        static readonly Color PREV = Color.FromArgb(0x26, 0x26, 0x26);
-        static readonly Color TXT2 = Color.FromArgb(0xb5, 0xb5, 0xb5);
-        static readonly Color AZUL = Color.FromArgb(0x4c, 0x9c, 0xff);
-
-        float escala = 1f;
-        int S(int v) { return (int)(v * escala); }
-
-        ComboBox cbScanner, cbFonte, cbTipo, cbModo, cbDpi;
-        LinkLabel lnkPasta;
-        Button btnScan, btnCopiar, btnAbrir, btnPasta;
-        ProgressBar barra;
-        Label lblStatus;
-        PictureBox preview;
-        Label lblVazio;
-
-        string pasta = Config.PastaPadrao;
-        Bitmap ultimaImagem;
-        string ultimoArquivo;
-
-        public Janela()
-        {
-            using (var g = CreateGraphics()) escala = g.DpiX / 96f;
-            Text = "Digitalizar";
-            BackColor = BG;
-            ForeColor = Color.White;
-            Font = new Font("Segoe UI", 10f);
-            ClientSize = new Size(S(1000), S(720));
-            MinimumSize = new Size(S(820), S(640));
-            StartPosition = FormStartPosition.CenterScreen;
-            try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
-
-            Montar();
-            Shown += (s, e) => Detectar();
-        }
-
-        Panel Card(Control pai, string titulo, ref int y)
-        {
-            var p = new Panel { BackColor = CARD, Left = S(16), Top = y, Width = S(328), Height = S(66) };
-            p.Controls.Add(new Label { Text = titulo, ForeColor = TXT2, Left = S(12), Top = S(6), AutoSize = true, Font = new Font("Segoe UI", 9f) });
-            pai.Controls.Add(p);
-            y += p.Height + S(10);
-            return p;
-        }
-
-        ComboBox Combo(Panel card, string[] valores, string padrao, int largura)
-        {
-            var c = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat,
-                BackColor = CARD, ForeColor = Color.White, Font = new Font("Segoe UI", 11f),
-                Left = S(10), Top = S(28), Width = largura > 0 ? largura : S(306)
-            };
-            if (valores != null) { c.Items.AddRange(valores); c.SelectedItem = padrao; }
-            card.Controls.Add(c);
-            return c;
-        }
-
-        Button Botao(string texto, bool primario)
-        {
-            var b = new Button
-            {
-                Text = texto, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand,
-                BackColor = primario ? AZUL : CARD, ForeColor = primario ? Color.Black : Color.White,
-                Font = new Font("Segoe UI", 10.5f, primario ? FontStyle.Bold : FontStyle.Regular),
-                Height = S(40), AutoSize = !primario, Padding = new Padding(S(8), 0, S(8), 0)
-            };
-            b.FlatAppearance.BorderSize = 0;
-            b.FlatAppearance.MouseOverBackColor = primario ? Color.FromArgb(0x76, 0xb3, 0xff) : Color.FromArgb(0x3a, 0x3a, 0x3a);
-            return b;
-        }
-
-        void Montar()
-        {
-            var esquerda = new Panel { Dock = DockStyle.Left, Width = S(360), BackColor = BG, AutoScroll = true };
-            var direita = new Panel { Dock = DockStyle.Fill, BackColor = PREV, Padding = new Padding(S(20)) };
-            Controls.Add(direita);
-            Controls.Add(esquerda);
-
-            int y = S(16);
-
-            var card = Card(esquerda, "Scanner", ref y);
-            cbScanner = Combo(card, null, null, S(220));
-            var btnDetectar = new LinkLabel
-            {
-                Text = "Detectar", LinkColor = AZUL, ActiveLinkColor = Color.White, LinkBehavior = LinkBehavior.HoverUnderline,
-                Left = S(240), Top = S(32), AutoSize = true, Font = new Font("Segoe UI", 10f)
-            };
-            btnDetectar.LinkClicked += (s, e) => Detectar();
-            card.Controls.Add(btnDetectar);
-
-            cbFonte = Combo(Card(esquerda, "Fonte", ref y), Config.Fontes, Config.Fontes[0], 0);
-            cbTipo = Combo(Card(esquerda, "Tipo de arquivo", ref y), Config.Tipos, Config.TipoPadrao, 0);
-            cbModo = Combo(Card(esquerda, "Modo de cor", ref y), Config.Modos, Config.ModoPadrao, 0);
-            cbDpi = Combo(Card(esquerda, "Resolução (DPI)", ref y), Config.Resolucoes, Config.ResolucaoPadrao, 0);
-
-            card = Card(esquerda, "Salvar arquivo em", ref y);
-            card.Height = S(96); y += S(30);
-            lnkPasta = new LinkLabel
-            {
-                LinkColor = AZUL, ActiveLinkColor = Color.White, Left = S(12), Top = S(28),
-                Width = S(306), Height = S(40), Font = new Font("Segoe UI", 9.5f)
-            };
-            lnkPasta.LinkClicked += (s, e) => EscolherPasta();
-            card.Controls.Add(lnkPasta);
-            var lnkPadrao = new LinkLabel
-            {
-                Text = "Restaurar pasta padrão", LinkColor = TXT2, ActiveLinkColor = Color.White,
-                Left = S(12), Top = S(70), AutoSize = true, Font = new Font("Segoe UI", 8.5f)
-            };
-            lnkPadrao.LinkClicked += (s, e) => { pasta = Config.PastaPadrao; AtualizarPasta(); };
-            card.Controls.Add(lnkPadrao);
-            AtualizarPasta();
-
-            btnScan = Botao("Digitalizar", true);
-            btnScan.Left = S(16); btnScan.Top = y; btnScan.Width = S(328);
-            btnScan.Click += (s, e) => IniciarScan();
-            esquerda.Controls.Add(btnScan);
-            y += btnScan.Height + S(10);
-
-            barra = new ProgressBar { Left = S(16), Top = y, Width = S(328), Height = S(6), Style = ProgressBarStyle.Blocks };
-            esquerda.Controls.Add(barra);
-            y += S(14);
-
-            lblStatus = new Label { Left = S(16), Top = y, Width = S(328), Height = S(60), ForeColor = TXT2, Font = new Font("Segoe UI", 9f) };
-            esquerda.Controls.Add(lblStatus);
-
-            // lado direito
-            var acoes = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = S(50), BackColor = PREV, Padding = new Padding(0, S(6), 0, 0) };
-            btnCopiar = Botao("📋  Copiar imagem", false);
-            btnAbrir = Botao("🖼  Abrir", false);
-            btnPasta = Botao("📁  Abrir pasta", false);
-            foreach (var b in new[] { btnCopiar, btnAbrir, btnPasta })
-            {
-                b.Margin = new Padding(0, 0, S(10), 0);
-                acoes.Controls.Add(b);
-            }
-            btnCopiar.Click += (s, e) => Copiar();
-            btnAbrir.Click += (s, e) => Abrir();
-            btnPasta.Click += (s, e) => AbrirPasta();
-
-            preview = new PictureBox { Dock = DockStyle.Fill, SizeMode = PictureBoxSizeMode.Zoom, BackColor = PREV };
-            lblVazio = new Label
-            {
-                Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = TXT2,
-                Text = "A pré-visualização aparece aqui\ndepois de digitalizar.", Font = new Font("Segoe UI", 11f)
-            };
-            direita.Controls.Add(lblVazio);
-            direita.Controls.Add(preview);
-            direita.Controls.Add(acoes);
-            preview.Visible = false;
-
-            AcoesAtivas(false);
-        }
-
-        void AtualizarPasta() { lnkPasta.Text = pasta; }
-
-        void AcoesAtivas(bool ativo)
-        {
-            btnCopiar.Enabled = btnAbrir.Enabled = btnPasta.Enabled = ativo;
-            foreach (var b in new[] { btnCopiar, btnAbrir, btnPasta })
-                b.ForeColor = ativo ? Color.White : Color.Gray;
-        }
-
-        void Ocupado(bool ocupado, string texto)
-        {
-            if (texto != null) lblStatus.Text = texto;
-            btnScan.Enabled = !ocupado;
-            btnScan.BackColor = ocupado ? Color.FromArgb(0x3a, 0x5a, 0x80) : AZUL;
-            barra.Style = ocupado ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
-            barra.MarqueeAnimationSpeed = ocupado ? 30 : 0;
-            Cursor = ocupado ? Cursors.AppStarting : Cursors.Default;
-        }
-
-        void EmSegundoPlano(ThreadStart acao)
-        {
-            var t = new Thread(acao) { IsBackground = true };
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-        }
-
-        void Detectar()
-        {
-            Ocupado(true, "Procurando scanners…");
-            EmSegundoPlano(() =>
-            {
-                List<ScannerInfo> lista = null; string erro = null;
-                try { lista = Wia.Listar(); }
-                catch (Exception e) { erro = Wia.MensagemErro(e); }
-                BeginInvoke((Action)(() => Detectado(lista ?? new List<ScannerInfo>(), erro)));
-            });
-        }
-
-        void Detectado(List<ScannerInfo> lista, string erro)
-        {
-            Ocupado(false, null);
-            cbScanner.Items.Clear();
-            foreach (var s in lista) cbScanner.Items.Add(s);
-            if (lista.Count > 0)
-            {
-                var hp = lista.FirstOrDefault(s => s.Nome.ToUpper().Contains("HP") || s.Nome.ToUpper().Contains("DESKJET")) ?? lista[0];
-                cbScanner.SelectedItem = hp;
-                lblStatus.Text = lista.Count + " scanner(s) encontrado(s). Pronto.";
-            }
-            else
-            {
-                lblStatus.Text = erro ?? "Nenhum scanner encontrado. Verifique se a impressora está ligada e conectada (Wi-Fi/USB) e clique em 'Detectar'.";
-            }
-        }
-
-        void EscolherPasta()
-        {
-            using (var d = new FolderBrowserDialog())
-            {
-                d.Description = "Escolher pasta de destino";
-                d.SelectedPath = Directory.Exists(pasta) ? pasta : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                if (d.ShowDialog(this) == DialogResult.OK) { pasta = d.SelectedPath; AtualizarPasta(); }
-            }
-        }
-
-        void IniciarScan()
-        {
-            var sc = cbScanner.SelectedItem as ScannerInfo;
-            if (sc == null)
-            {
-                MessageBox.Show(this, "Selecione um scanner (clique em 'Detectar').", "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            string modo = (string)cbModo.SelectedItem;
-            int dpi = int.Parse((string)cbDpi.SelectedItem);
-            string tipo = (string)cbTipo.SelectedItem;
-            string destino = pasta;
-
-            if (dpi >= 1200 && modo == "Cor" &&
-                MessageBox.Show(this, "1200 DPI em cor gera um arquivo muito grande e demora vários minutos. Continuar?",
-                    "Digitalizar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
-
-            AcoesAtivas(false);
-            Ocupado(true, "Digitalizando (" + modo + ", " + dpi + " DPI)…");
-            EmSegundoPlano(() =>
-            {
-                try
-                {
-                    Bitmap img = Wia.Digitalizar(sc.Id, modo, dpi);
-                    BeginInvoke((Action)(() => lblStatus.Text = "Salvando…"));
-                    string caminho = Imagens.Guardar(img, destino, tipo, modo, dpi);
-                    BeginInvoke((Action)(() => Concluido(img, caminho)));
-                }
-                catch (Exception e)
-                {
-                    string msg = Wia.MensagemErro(e);
-                    BeginInvoke((Action)(() => Falhou(msg)));
-                }
-            });
-        }
-
-        void Concluido(Bitmap img, string caminho)
-        {
-            Ocupado(false, "Salvo: " + Path.GetFileName(caminho));
-            var antiga = ultimaImagem;
-            ultimaImagem = img;
-            ultimoArquivo = caminho;
-            preview.Image = img;
-            preview.Visible = true;
-            lblVazio.Visible = false;
-            if (antiga != null) antiga.Dispose();
-            AcoesAtivas(true);
-        }
-
-        void Falhou(string msg)
-        {
-            Ocupado(false, "Falhou: " + msg);
-            MessageBox.Show(this, msg, "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-
-        void Copiar()
-        {
-            if (ultimaImagem == null) return;
-            try { Clipboard.SetImage(ultimaImagem); lblStatus.Text = "Imagem copiada. Cole com Ctrl+V."; }
-            catch (Exception e) { MessageBox.Show(this, e.Message, "Copiar imagem", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-        }
-
-        void Abrir()
-        {
-            if (ultimoArquivo != null && File.Exists(ultimoArquivo))
-                Process.Start(new ProcessStartInfo(ultimoArquivo) { UseShellExecute = true });
-        }
-
-        void AbrirPasta()
-        {
-            if (ultimoArquivo != null && File.Exists(ultimoArquivo))
-                Process.Start("explorer.exe", "/select,\"" + ultimoArquivo + "\"");
-            else if (Directory.Exists(pasta))
-                Process.Start("explorer.exe", "\"" + pasta + "\"");
-        }
-    }
-
-    static class Programa
-    {
-        [DllImport("user32.dll")] static extern bool SetProcessDPIAware();
-
-        [STAThread]
-        static void Main()
-        {
-            try { SetProcessDPIAware(); } catch { }
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Janela());
-        }
-    }
 }
