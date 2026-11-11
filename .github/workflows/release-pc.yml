@@ -1,0 +1,84 @@
+# Compila o Digitalizar (PC) com o compilador do próprio Windows, monta os pacotes e publica na release.
+# Roda quando uma tag "v*" (ex.: v3.4.0) é enviada. A assinatura (SignPath) é opcional: só acontece
+# se o segredo SIGNPATH_API_TOKEN existir. Veja CODE_SIGNING.md.
+name: Release do PC
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compilar com o csc do Windows
+        shell: cmd
+        working-directory: src
+        run: |
+          set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
+          set RES=/resource:Digitalizar.ico,Digitalizar.ico /resource:idiomas.tsv,idiomas.tsv
+          for %%t in (16 20 24 32 40 48 64) do call set RES=%%RES%% /resource:icones\Digitalizar_%%t.png,ico_%%t.png
+          "%CSC%" /nologo /target:winexe /optimize+ /out:Digitalizar.exe /win32icon:Digitalizar.ico %RES% /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:Microsoft.CSharp.dll /r:System.Core.dll /r:System.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll Tema.cs Idioma.cs Moldura.cs Controles.cs Comum.cs Documento.cs Atualizador.cs Editor.cs Opcoes.cs Sobre.cs Janela.cs
+
+      - name: Guardar o executável sem assinatura
+        id: sem-assinatura
+        uses: actions/upload-artifact@v4
+        with:
+          name: Digitalizar-exe-sem-assinatura
+          path: src/Digitalizar.exe
+
+      - name: Assinar com a SignPath (se configurado)
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.sem-assinatura.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: assinado
+
+      - name: Usar o executável assinado
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        shell: pwsh
+        run: Copy-Item -Force assinado\Digitalizar.exe src\Digitalizar.exe
+
+      - name: Montar os pacotes
+        shell: bash
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          [ "$GITHUB_REF_TYPE" = "tag" ] || V="dev"
+          mkdir -p dist/win dist/Digitalizar/icones
+          cp src/Digitalizar.exe LICENSE dist/win/
+          cp src/Digitalizar.exe LICENSE src/digitalizar.sh src/instalar-atalho.sh dist/Digitalizar/
+          cp src/icones/Digitalizar_64.png dist/Digitalizar/icones/
+          chmod +x dist/Digitalizar/*.sh
+          (cd dist/win && 7z a -tzip "../Digitalizar-$V-windows.zip" Digitalizar.exe LICENSE)
+          (cd dist && tar -czf "Digitalizar-$V-linux.tar.gz" Digitalizar)
+          (cd dist && sha256sum Digitalizar-*.zip Digitalizar-*.tar.gz | tee SHA256SUMS.txt)
+
+      - name: Publicar na release
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/Digitalizar-*.zip dist/Digitalizar-*.tar.gz dist/SHA256SUMS.txt --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/Digitalizar-*.zip dist/Digitalizar-*.tar.gz dist/SHA256SUMS.txt --title "Digitalizar ${GITHUB_REF_NAME#v}" --generate-notes
+          fi
+
+      - name: Guardar os pacotes (execuções manuais)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pacotes
+          path: dist/Digitalizar-*

@@ -61,6 +61,8 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 
 > [!WARNING]
 > **Na primeira vez, o Windows pode mostrar um aviso azul ("O Windows protegeu o computador").** Isso acontece com todo programa sem assinatura digital paga. Clique em **Mais informações → Executar assim mesmo**. O código está todo aqui, aberto, para quem quiser conferir.
+>
+> 💡 **Dica:** clique com o botão direito no `.zip` baixado → **Propriedades** → marque **Desbloquear** → OK, e só depois extraia. Assim o aviso nem aparece. O hash SHA-256 de cada arquivo está nos anexos da release, para você conferir. A [política de assinatura de código](CODE_SIGNING.md) explica como estamos tratando isso.
 
 ### 🐧 No Linux
 
