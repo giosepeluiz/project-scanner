@@ -238,7 +238,7 @@ namespace Digitalizar
             var sb = new StringBuilder();
             foreach (var l0 in linhas)
             {
-                string l = l0.TrimEnd();
+                string l = l0.TrimEnd(new[] { ' ', '\t' });
                 if (Regex.IsMatch(l, @"^\s*\|?\s*:?-{2,}")) continue;         // linha separadora de tabela
                 l = Regex.Replace(l, @"^\s{0,3}#{1,6}\s*", "");
                 l = Regex.Replace(l, @"^(\s*)[-*]\s+", "$1• ");

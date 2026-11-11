@@ -665,7 +665,7 @@ namespace Digitalizar
                 offsets.Add(fs.Position); w("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
                 var kids = new StringBuilder();
                 for (int i = 0; i < n; i++) kids.Append((3 + 3 * i) + " 0 R ");
-                offsets.Add(fs.Position); w("2 0 obj\n<< /Type /Pages /Kids [" + kids.ToString().TrimEnd() + "] /Count " + n + " >>\nendobj\n");
+                offsets.Add(fs.Position); w("2 0 obj\n<< /Type /Pages /Kids [" + kids.ToString().Trim() + "] /Count " + n + " >>\nendobj\n");
                 for (int i = 0; i < n; i++)
                 {
                     PaginaPdf p = paginas[i];
