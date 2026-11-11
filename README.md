@@ -76,7 +76,7 @@ cd Digitalizar
 ./instalar-atalho.sh                         # (opcional) cria o atalho no menu
 ```
 
-> As versões **1.0 e 2.x são só para Windows**. A versão para **Linux** existe a partir da **3.1** (a mais recente é a **3.2**).
+> As versões **1.0 e 2.x são só para Windows**. A versão para **Linux** existe a partir da **3.1** (a mais recente é a **3.3**).
 
 ## 📱 Versão para Android
 
@@ -176,7 +176,7 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 
 ## 🕰️ Histórico de versões
 
-### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua"
+### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua" + "Sempre atualizado"
 **Releases: [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) (mais recente) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
@@ -200,6 +200,13 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 - **15 idiomas.** O programa abre no idioma do sistema (ou em inglês, se o idioma do sistema não estiver na lista), e dá para trocar nas Opções. Os principais ficam no topo: Português (Brasil), Português (Portugal), English (US), English (UK) e Español. Depois vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文 (simplificado).
 - **O programa lembra de tudo:** idioma, tema, cor, scanner, tamanho, tipo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela (inclusive maximizada) e o valor do Recorte rápido.
 - Nas Opções, o tema "do sistema" aparece com o nome certo no Linux.
+
+**O que a 3.3 acrescentou:** 📄
+- **Trocar o modo de cor depois de digitalizar:** Colorido, Tons de cinza ou Preto e branco. O scanner digitaliza sempre em cores e o programa converte na hora. Em JPEG e PNG o arquivo é regravado.
+- **PDF de várias páginas** (só com o tipo PDF): faixa de miniaturas, **+** para digitalizar a próxima página, **×** para excluir e **Novo PDF** para recomeçar. O PDF só é gravado em **Salvar PDF** (o programa avisa se houver algo sem salvar) e, com duas páginas ou mais, o tipo de arquivo fica travado em PDF.
+- **Atualização dentro do programa:** ao abrir, ele procura novas versões no GitHub (dá para desligar nas Opções) e mostra um aviso com as **notas da versão**. Também dá para verificar à mão em **Opções → Atualizações**. **Atualizar agora** baixa, troca o programa e reinicia.
+- A pasta padrão de destino deixou de ficar presa a um usuário específico.
+- 📱 No mesmo pacote de novidades, o **Android 1.3.0** ganhou a atualização dentro do app e a mesma regra de várias páginas só com PDF.
 
 > Por que **3.2** e não 4.0? Pelo [Versionamento Semântico](https://semver.org/lang/pt-BR/), um recurso novo que não quebra nada do que já existia aumenta o número do meio (*minor*). O 4.0 fica para uma mudança realmente grande.
 
