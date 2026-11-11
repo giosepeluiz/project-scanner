@@ -623,14 +623,34 @@ namespace Digitalizar
         [STAThread]
         static void Main()
         {
-            try { SetProcessDPIAware(); } catch { }
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            using (var g = Graphics.FromHwnd(IntPtr.Zero)) Tema.Escala = g.DpiX / 96f;
-            Tema.Carregar();
-            L.Iniciar();
-            Atualizador.LimparAntigos();
-            Application.Run(new Janela());
+            // qualquer erro que feche o programa é mostrado e gravado em erro.log, na pasta do programa
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (s, e) => RelatarErro(e.Exception);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => RelatarErro(e.ExceptionObject as Exception);
+            try
+            {
+                try { SetProcessDPIAware(); } catch { }
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                using (var g = Graphics.FromHwnd(IntPtr.Zero)) Tema.Escala = g.DpiX / 96f;
+                Tema.Carregar();
+                L.Iniciar();
+                Atualizador.LimparAntigos();
+                Application.Run(new Janela());
+            }
+            catch (Exception e) { RelatarErro(e); }
+        }
+
+        static void RelatarErro(Exception e)
+        {
+            string txt = (e == null ? "erro desconhecido" : e.ToString());
+            try
+            {
+                string pasta = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                File.AppendAllText(Path.Combine(pasta, "erro.log"), DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n" + txt + "\r\n\r\n");
+            }
+            catch { }
+            try { MessageBox.Show("O Digitalizar encontrou um erro:\n\n" + txt, "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Error); } catch { }
         }
     }
 }
