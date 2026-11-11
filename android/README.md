@@ -123,6 +123,21 @@ O `build.sh` assina com `keystore/digitalizar.jks` (senha na variável `KS_PASS`
 | `Ui.java` · `Tema.java` · `L.java` | Controles, temas/cores e idiomas |
 | `Opcoes.java` · `Sobre.java` · `Provedor.java` | Opções, Sobre e a partilha de arquivos com outros apps |
 
+## 🕰️ Histórico de versões
+
+### 🔄 Versão 1.3: "Sempre atualizado"
+**Release: [android-v1.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.3.0)** · acompanha as funções da 3.3 do PC
+
+- **Atualização dentro do app:** ao abrir, ele procura novas versões no GitHub (dá para desligar em **Opções → Atualizações**) e mostra um aviso com as **notas da versão**. Também dá para verificar à mão. **Atualizar agora** baixa o APK e abre o instalador do Android; na primeira vez, o Android pede para permitir instalar apps desta fonte.
+- **Várias páginas só com PDF:** a faixa de páginas só aparece com o tipo PDF. Com duas páginas ou mais, o tipo fica travado em PDF; com uma só, destrava. Em JPEG e PNG, cada digitalização é uma imagem.
+
+### 📱 Versão 1.2: "Agora no seu bolso"
+**Release: [android-v1.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.2.0)** · acompanha as funções da 3.2 do PC
+
+A primeira versão pública: scanner de rede (eSCL / AirScan), câmera inteligente com detecção do documento, PDF de várias páginas, troca do modo de cor depois de digitalizar, edição rápida, 15 idiomas, temas e cores.
+
+📜 O histórico completo está no **[CHANGELOG do Android](CHANGELOG.md)**.
+
 ## 🎨 Ícones
 
 Os ícones do app são do [Font Awesome Free 6.7.2](https://fontawesome.com) (ícones CC BY 4.0, fonte SIL OFL 1.1). A fonte vai sem modificação em `app/assets/fontawesome/`, junto com a licença.
