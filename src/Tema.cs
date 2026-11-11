@@ -134,6 +134,7 @@ namespace Digitalizar
                 case "\uE946": return "\u24D8"; // sobre ⓘ
                 case "\uE73E": return "\u2713"; // marcado ✓
                 case "\uE770": return "\u25CE"; // sistema ◎
+                case "\uE7C3": return "\u25A4"; // novo documento ▤
                 default: return null;
             }
         }

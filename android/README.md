@@ -6,7 +6,7 @@
 
 ### O mesmo Digitalizar do Windows e do Linux, agora no celular, e com câmera inteligente.
 
-![Versão](https://img.shields.io/badge/versão-1.2.0-4cc2ff?style=for-the-badge)
+![Versão](https://img.shields.io/badge/versão-1.3.0-4cc2ff?style=for-the-badge)
 ![Android](https://img.shields.io/badge/Android-10%2B-3ddc84?style=for-the-badge&logo=android&logoColor=white)
 ![Licença MIT](https://img.shields.io/badge/licença-MIT-6ccb5f?style=for-the-badge)
 
@@ -18,11 +18,11 @@
 
 ## 👋 O que mudou em relação ao computador?
 
-O Android segue a numeração do Digitalizar de PC com uma diferença de duas "casas": a **1.2** do Android acompanha as funções da **3.2** do PC (idiomas, temas, edição rápida). São dois apps separados, no mesmo repositório.
+O Android segue a numeração do Digitalizar de PC com uma diferença de duas "casas": a **1.3** do Android acompanha as funções da **3.3** do PC (idiomas, temas, edição rápida, PDF de várias páginas, atualização no programa). São dois apps separados, no mesmo repositório.
 
 | | 🖥️ PC (Windows / Linux) | 📱 Android |
 |---|---|---|
-| **Versão** | 3.2.0 | **1.2.0** |
+| **Versão** | 3.3.0 | **1.3.0** |
 | **Linguagem** | C# (Windows Forms) | Java puro, sem AndroidX e sem Gradle |
 | **Origem da digitalização** | Scanner USB ou de rede (WIA no Windows, SANE no Linux) | **Scanner de rede** (eSCL / AirScan / Mopria) **ou câmera do celular** |
 | **Câmera inteligente** | Não tem | **Sim**: detecta a folha, endireita, tira sombras e vira um scan |
@@ -30,8 +30,9 @@ O Android segue a numeração do Digitalizar de PC com uma diferença de duas "c
 | **Scanner USB** | Sim | Não (o celular só fala com scanners na rede Wi-Fi) |
 | **Adicionar scanner** | Detecção automática | Detecção automática (mDNS) ou **Adicionar por IP** |
 | **Salvar** | Salva automaticamente depois de digitalizar | **Só salva quando você toca em "Salvar"** |
-| **PDF** | Um PDF por digitalização | **PDF com várias páginas**: adicionar e excluir páginas antes de salvar |
-| **Cor depois de digitalizar** | Definida antes de digitalizar | **Pode trocar depois**: colorido vira cinza ou P&B e volta (uma digitalização feita em cinza ou P&B não volta a ser colorida) |
+| **PDF** | **PDF com várias páginas** (só com o tipo PDF): adicionar e excluir páginas | **PDF com várias páginas** (só com o tipo PDF): adicionar e excluir páginas antes de salvar |
+| **Cor depois de digitalizar** | **Pode trocar depois** (o scanner digitaliza em cores e o programa converte) | **Pode trocar depois**: colorido vira cinza ou P&B e volta (uma digitalização feita em cinza ou P&B não volta a ser colorida) |
+| **Atualização** | Dentro do programa, pelas releases do GitHub (automática ou manual, com notas da versão) | Dentro do app, pelas releases `android-v*` do GitHub; baixa o APK e abre o instalador do Android |
 | **Pasta de destino** | Documentos › Scanned Documents, ou a que você escolher | Documentos › Scanned Documents ou pasta escolhida (acesso do Android) |
 | **Copiar / compartilhar** | Copiar imagem (Ctrl+V) e compartilhar do Windows | Copiar, compartilhar e abrir pelo próprio Android |
 | **Edição rápida** | Recorte, giro, brilho, contraste, níveis, curvas e limiar | Os mesmos recursos, adaptados ao toque |
@@ -63,7 +64,7 @@ Na tela de revisão você pode arrastar os cantos (com lupa para acertar) e esco
 
 ## ⬇️ Instalar
 
-1. Baixe o `Digitalizar-1.2.0-android.apk` no celular.
+1. Baixe o `Digitalizar-1.3.0-android.apk` no celular.
 2. Toque nele. Na primeira vez o Android pede para **permitir a instalação de apps desta fonte**: permita e volte.
 3. Pronto! Na primeira vez que usar a câmera, ele pede a permissão.
 
@@ -104,7 +105,7 @@ O app é escrito em **Java** usando só a API do Android (sem AndroidX, sem Grad
 
 ```bash
 tools/preparar.sh      # baixa aapt2, dx, android.jar e apksigner para /opt/asdk (uma vez só)
-./build.sh             # gera build/Digitalizar-1.2.0-android.apk
+./build.sh             # gera build/Digitalizar-1.3.0-android.apk
 teste/testar.sh        # testa a deteção do documento no computador, com fotos sintéticas
 ```
 

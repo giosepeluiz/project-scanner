@@ -109,6 +109,40 @@ public class Opcoes extends Activity {
         cd.addView(nomeCor, Ui.lpM(MP, WC, 0, 8, 0, 0));
         c.addView(cd, Ui.lpM(MP, WC, 0, 0, 0, 12));
 
+        // atualizações
+        LinearLayout cu = Ui.card(this);
+        cu.addView(Ui.rotulo(this, L.T("Atualizações"), 16, Tema.TXT, true), Ui.lpM(MP, WC, 0, 0, 0, 6));
+        final Ui.Interruptor swAuto = new Ui.Interruptor(this, L.T("Verificar automaticamente"), Atualizador.autoLigado());
+        swAuto.aoMudar = new Runnable() { public void run() { Atualizador.definirAuto(swAuto.ligado()); } };
+        cu.addView(swAuto, Ui.lp(MP, WC));
+        final TextView estadoAtu = Ui.rotulo(this, L.F("Versão instalada: {0}", Config.VERSAO), 13.5f, Tema.TXT2, false);
+        cu.addView(estadoAtu, Ui.lpM(MP, WC, 0, 4, 0, 8));
+        final TextView verificar = Ui.botao(this, Ui.Ic.ATUALIZAR, L.T("Verificar agora"), false);
+        verificar.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Ui.habilitar(verificar, false);
+                estadoAtu.setText(L.T("Procurando atualizações…"));
+                new Thread(new Runnable() {
+                    public void run() {
+                        Atualizador.Info info = null; String erro = null;
+                        try { info = Atualizador.consultar(); } catch (Throwable e) { erro = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage(); }
+                        final Atualizador.Info fi = info; final String fe = erro;
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                if (isFinishing()) return;
+                                Ui.habilitar(verificar, true);
+                                if (fe != null) estadoAtu.setText(L.T("Não foi possível verificar as atualizações.") + "\n" + fe);
+                                else if (fi.nova) { estadoAtu.setText(L.F("Nova versão disponível: {0}", fi.versao)); Atualizador.mostrar(Opcoes.this, fi); }
+                                else estadoAtu.setText(L.F("Você já está na versão mais recente ({0}).", Config.VERSAO));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+        cu.addView(verificar, Ui.lp(WC, WC));
+        c.addView(cu, Ui.lpM(MP, WC, 0, 0, 0, 12));
+
         TextView fechar = Ui.botao(this, "", L.T("Fechar"), false);
         fechar.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { finish(); } });
         c.addView(fechar, Ui.lp(MP, WC));

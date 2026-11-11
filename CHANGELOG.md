@@ -7,6 +7,31 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ---
 
+## [3.3.0] – 2026-11-11 · "Várias páginas e sempre atualizado" 📄
+
+### Adicionado
+- **Trocar o modo de cor depois de digitalizar** (Colorido, Tons de cinza e Preto e branco), como no Android. O scanner passa a digitalizar sempre em cores; o programa guarda o original colorido e converte na hora. O arquivo salvo é regravado com o novo modo.
+- **PDF de várias páginas**, só quando o tipo de arquivo é **PDF**:
+  - Aparece uma **faixa de páginas** com miniaturas, o botão **+** para digitalizar a próxima página e o **×** para excluir uma página (com confirmação; a última página não pode ser excluída).
+  - O botão **Novo PDF** começa um documento novo.
+  - Com JPEG ou PNG, a faixa some e cada digitalização continua gerando um arquivo.
+  - O editor rápido abre a página escolhida e devolve o resultado para ela.
+- **Atualização dentro do programa**, direto das releases do GitHub:
+  - Verificação **automática** ao abrir (pode ser desligada em **Opções → Atualizações**) e **manual**, com o botão **Verificar agora**.
+  - Um aviso mostra a nova versão e as **notas da versão**, com **Atualizar agora**, **Depois** e **Pular esta versão**.
+  - O programa baixa o pacote do seu sistema (Windows ou Linux), troca o executável e reinicia sozinho. Se algo falhar, abre a página da versão no navegador.
+- Traduções dos novos textos nos 15 idiomas.
+
+### Corrigido
+- **3.2.1:** a pasta padrão de destino estava fixa num caminho de usuário. Agora é `Documentos/Scanned Documents` (Windows) ou `~/Scanned Documents` (Linux) do usuário que abre o programa.
+- A janela de Opções agora cabe em telas baixas (tem rolagem).
+
+### Observações
+- Editar uma imagem em cinza ou preto e branco faz dela o novo "original": a cor dessa página não volta mais.
+- PDFs de várias páginas em 600 ou 1200 DPI usam bastante memória. Em 1200 DPI a digitalização é sempre colorida e o arquivo fica muito grande.
+- A atualização usa a API pública do GitHub, que limita as consultas por rede (60 por hora). Se o limite for atingido, o programa avisa e tenta de novo depois.
+- Não foi possível testar em scanner real nem no Windows; os testes foram feitos no Linux com um scanner simulado.
+
 ## [3.2.0] – 2026-11-07 · "Fala a sua língua" 🌍
 
 ### Adicionado
@@ -115,6 +140,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Ações depois de digitalizar: **Copiar imagem**, **Abrir** e **Abrir pasta**.
 - `compilar.bat`: recompila usando o `csc.exe` que já vem no Windows.
 
+[3.3.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0
 [3.2.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0
 [3.1.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0
 [3.0.0]: https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0

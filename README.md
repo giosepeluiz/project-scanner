@@ -6,10 +6,10 @@
 
 ### Digitalize, ajuste e compartilhe em segundos, sem instalar nada.
 
-[![Versão](https://img.shields.io/badge/versão-3.2.0-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
+[![Versão](https://img.shields.io/badge/versão-3.3.0-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Linux](https://img.shields.io/badge/Linux-SANE-fcc624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/giosepeluiz/project-scanner/releases/latest)
-[![Android](https://img.shields.io/badge/Android-1.2.0-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.2.0)
+[![Android](https://img.shields.io/badge/Android-1.3.0-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.3.0)
 [![Licença MIT](https://img.shields.io/badge/licença-MIT-6ccb5f?style=for-the-badge)](LICENSE)
 
 **[⬇️ Baixar](#️-download)** · **[📖 Como usar](#-como-funciona-passo-a-passo)** · **[🕰️ Versões](#️-histórico-de-versões)** · **[🤝 Contribuir](#-código-aberto-contribua)**
@@ -42,6 +42,9 @@ Com o tempo ele ganhou um editor rápido para corrigir a imagem, visual moderno 
 | ✂️ **Edição rápida** | Recortar, girar, brilho, contraste, níveis, curvas e limiar, com pré-visualização ao vivo |
 | ↗️ **Compartilhar** | Abre a janela de compartilhamento do Windows |
 | 🌗 **Tema claro, escuro ou do sistema** | Mais 10 cores de destaque (ou a cor do próprio Windows) |
+| 📄 **PDF de várias páginas** | Com o tipo **PDF**, adicione páginas, exclua e comece outro PDF; faixa de miniaturas |
+| 🎨 **Trocar o modo de cor depois** | Colorido, tons de cinza ou preto e branco mesmo depois de digitalizar |
+| 🔄 **Atualização no programa** | Aviso de nova versão com as notas, verificação automática ou manual |
 | 🌍 **15 idiomas** | Abre no idioma do sistema; português (Brasil e Portugal), inglês, espanhol e mais 10 nas Opções |
 | 💾 **Lembra tudo** | Idioma, tema, cor, scanner, tamanho, formato, resolução, pasta, painel e janela ficam guardados |
 | 🎒 **Portátil** | Um único arquivo, sem instalação |
@@ -52,10 +55,10 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 
 | Sistema | Arquivo | Como usar |
 |---|---|---|
-| 🪟 **Windows 10/11** | [`Digitalizar-3.2.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.2.0/Digitalizar-3.2.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
-| 🐧 **Linux** | [`Digitalizar-3.2.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.2.0/Digitalizar-3.2.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
+| 🪟 **Windows 10/11** | [`Digitalizar-3.3.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.0/Digitalizar-3.3.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
+| 🐧 **Linux** | [`Digitalizar-3.3.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.0/Digitalizar-3.3.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
 
-| 📱 **Android 10+** | [`Digitalizar-1.2.0-android.apk`](https://github.com/giosepeluiz/project-scanner/releases/download/android-v1.2.0/Digitalizar-1.2.0-android.apk) | Baixe no celular e toque para instalar. Veja a [versão Android](#-versão-para-android) |
+| 📱 **Android 10+** | [`Digitalizar-1.3.0-android.apk`](https://github.com/giosepeluiz/project-scanner/releases/download/android-v1.3.0/Digitalizar-1.3.0-android.apk) | Baixe no celular e toque para instalar. Veja a [versão Android](#-versão-para-android) |
 
 > [!WARNING]
 > **Na primeira vez, o Windows pode mostrar um aviso azul ("O Windows protegeu o computador").** Isso acontece com todo programa sem assinatura digital paga. Clique em **Mais informações → Executar assim mesmo**. O código está todo aqui, aberto, para quem quiser conferir.
@@ -68,7 +71,7 @@ Você precisa do **Mono** (para rodar o programa) e do **SANE** (para falar com 
 sudo apt install mono-complete sane-utils    # Debian / Ubuntu / Mint
 sudo apt install hplip                       # se o scanner for HP (ex.: DeskJet 2700)
 
-tar -xzf Digitalizar-3.2.0-linux.tar.gz
+tar -xzf Digitalizar-3.3.0-linux.tar.gz
 cd Digitalizar
 ./digitalizar.sh                             # abre o programa
 ./instalar-atalho.sh                         # (opcional) cria o atalho no menu
@@ -78,14 +81,15 @@ cd Digitalizar
 
 ## 📱 Versão para Android
 
-O **Digitalizar para Android** (versão **1.2.0**, que acompanha as funções da 3.2 do PC) fica na pasta [`android/`](android/) e tem release própria, com a tag `android-v1.2.0`. Ele faz tudo o que o PC faz com scanners de rede e **também digitaliza pela câmera**: um detector de documentos acha a folha, endireita e transforma a foto num scan.
+O **Digitalizar para Android** (versão **1.3.0**, que acompanha as funções da 3.3 do PC) fica na pasta [`android/`](android/) e tem release própria, com a tag `android-v1.3.0`. Ele faz tudo o que o PC faz com scanners de rede e **também digitaliza pela câmera**: um detector de documentos acha a folha, endireita e transforma a foto num scan.
 
 | | 🖥️ PC | 📱 Android |
 |---|---|---|
 | Origem | Scanner USB ou de rede (WIA / SANE) | Scanner de rede (eSCL / AirScan) **ou câmera** |
 | Salvar | Automático | **Só ao tocar em "Salvar"** |
-| PDF | Um por digitalização | **Várias páginas**, com adicionar e excluir |
-| Cor | Escolhida antes | **Pode trocar depois** de digitalizar |
+| PDF | **Várias páginas** (só com PDF), com adicionar e excluir | **Várias páginas** (só com PDF), com adicionar e excluir |
+| Cor | **Pode trocar depois** de digitalizar | **Pode trocar depois** de digitalizar |
+| Atualização | **Dentro do programa**, pelo GitHub | **Dentro do app**, pelo GitHub |
 | Linguagem | C# | Java puro, sem AndroidX |
 
 A comparação completa está no **[README do Android](android/README.md)** e o histórico no **[CHANGELOG do Android](android/CHANGELOG.md)**.
@@ -100,7 +104,7 @@ A comparação completa está no **[README do Android](android/README.md)** e o 
 2. Escolha o **Scanner**. Se a impressora estava desligada, ligue-a e clique em **Detectar**.
 3. Escolha o **Tamanho do documento**. O programa digitaliza só aquela área, o que é mais rápido e gera arquivos menores.
 4. Escolha o **Tipo de arquivo**, o **Modo de cor** e a **Resolução**. Uma dica: 300 DPI é ótimo para documentos e 600 para desenhos com detalhes finos.
-5. Clique em **Digitalizar**. A imagem aparece à direita e é **salva automaticamente** com um nome tipo `Scan_2026-11-07_124300.jpg`.
+5. Clique em **Digitalizar**. A imagem aparece à direita e é **salva automaticamente** com um nome tipo `Scan_2026-11-07_124300.jpg`. Depois de digitalizar, ainda dá para **trocar o Modo de cor**: o arquivo é regravado. Com o tipo **PDF**, aparece a faixa de páginas: use o **+** para digitalizar outra página (todas vão para o mesmo PDF) e **Novo PDF** para começar outro.
 
 Para trocar a pasta de destino, clique no card **Salvar arquivo em**; o link **Padrão** volta para a pasta original.
 
@@ -144,6 +148,7 @@ Para trocar a pasta de destino, clique no card **Salvar arquivo em**; o link **P
 
 - **☰** recolhe e expande o painel lateral, com uma animação suave. Recolhido, sobra mais espaço para a imagem e fica só o botão de digitalizar.
 - **⚙ Opções:**
+  - **Atualizações:** o programa procura novas versões no GitHub ao abrir (dá para desligar) e o botão **Verificar agora** faz a busca na hora. Quando há versão nova, aparece um aviso com as notas; **Atualizar agora** baixa, troca o programa e reinicia.
   - **Idioma:** na primeira vez, o programa abre no idioma do sistema. Nas Opções dá para escolher outro: no topo da lista ficam Português (Brasil), Português (Portugal), English (US e UK) e Español; depois de um traço vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文. O novo idioma vale ao reiniciar (há um botão **Reiniciar agora**).
   - **Tema:** claro, escuro ou do Windows. Muda na hora.
   - **Cor de destaque:** 10 cores ou a cor do Windows. Muda na hora.
@@ -173,7 +178,7 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 ## 🕰️ Histórico de versões
 
 ### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua"
-**Releases: [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) (mais recente) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
+**Releases: [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) (mais recente) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
 
@@ -242,12 +247,15 @@ cd src
 mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
     -resource:Digitalizar.ico,Digitalizar.ico -resource:idiomas.tsv,idiomas.tsv \
     $(for t in 16 20 24 32 40 48 64; do echo -n "-resource:icones/Digitalizar_$t.png,ico_$t.png "; done) \
-    -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:Microsoft.CSharp.dll -r:System.Core.dll -r:System.dll *.cs
+    -r:System.Windows.Forms.dll -r:System.Drawing.dll -r:Microsoft.CSharp.dll -r:System.Core.dll -r:System.dll \
+    -r:System.IO.Compression.dll -r:System.IO.Compression.FileSystem.dll *.cs
 ```
 
 | Arquivo | O que tem |
 |---|---|
 | `src/Janela.cs` | Janela principal e inicialização |
+| `src/Documento.cs` | Documento digitalizado: páginas, modo de cor e salvamento |
+| `src/Atualizador.cs` | Verificação e instalação de novas versões pelo GitHub |
 | `src/Editor.cs` | Edição rápida (recorte, rotação, tons) |
 | `src/Comum.cs` | Scanner (WIA no Windows, SANE no Linux), processamento de imagem e gerador de PDF |
 | `src/Controles.cs` | Controles próprios: seletores, botões, sliders, switch, editor de curvas |
@@ -257,7 +265,7 @@ mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
 | `src/Opcoes.cs` · `src/Sobre.cs` | Janelas de Opções e Sobre |
 | `android/` | Versão Android (Java), com o próprio README, CHANGELOG e `build.sh` |
 
-Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`, `v3.2.0`), então dá para ver o código de qualquer uma delas.
+Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`, `v3.2.0`, `v3.3.0`), então dá para ver o código de qualquer uma delas.
 
 ## 🤝 Código aberto: contribua!
 

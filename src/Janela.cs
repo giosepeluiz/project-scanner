@@ -15,8 +15,8 @@ using System.Windows.Forms;
 [assembly: AssemblyDescription("Digitalização com edição rápida")]
 [assembly: AssemblyCompany("Giosepe Luiz dos Santos")]
 [assembly: AssemblyCopyright("© 2026 Giosepe Luiz dos Santos")]
-[assembly: AssemblyVersion("3.2.0.0")]
-[assembly: AssemblyFileVersion("3.2.0.0")]
+[assembly: AssemblyVersion("3.3.0.0")]
+[assembly: AssemblyFileVersion("3.3.0.0")]
 
 namespace Digitalizar
 {
@@ -25,7 +25,9 @@ namespace Digitalizar
         static int S(int v) { return Tema.S(v); }
 
         Seletor selScanner, selFonte, selTamanho, selTipo, selModo, selDpi, selPasta;
-        Botao btnScan, btnCopiar, btnAbrir, btnPasta, btnEditar, btnPartilhar;
+        Botao btnScan, btnCopiar, btnAbrir, btnPasta, btnEditar, btnPartilhar, btnNovo;
+        FaixaPaginas faixa;
+        Action ajustarBotoes;
         BotaoIcone btnMenu, btnOpcoes, btnScanCompacto;
         BarraProgresso barra;
         Label lblStatus;
@@ -35,8 +37,8 @@ namespace Digitalizar
 
         List<ScannerInfo> scanners = new List<ScannerInfo>();
         string pasta = Prefs.Obter("pasta", Config.PastaPadrao);
-        Bitmap ultimaImagem;
-        string ultimoArquivo;
+        Documento doc;                         // digitalização aberta (uma imagem, ou as páginas do PDF)
+        string ultimoArquivo { get { return doc == null ? null : doc.Caminho; } }
 
         // animação da barra lateral
         readonly System.Windows.Forms.Timer anim = new System.Windows.Forms.Timer { Interval = 10 };
@@ -63,6 +65,7 @@ namespace Digitalizar
             {
                 if (Prefs.Obter("painel", "expandido") == "recolhido") RecolherSemAnimacao();
                 Detectar();
+                Atualizador.VerificarAutomatico(this);
             };
             FormClosing += (s, e) => GuardarJanela();
         }
@@ -119,8 +122,14 @@ namespace Digitalizar
             selDpi = NovoSeletor(conteudo, L.T("Resolução (DPI)"), Config.Resolucoes, Prefs.Obter("dpi", Config.ResolucaoPadrao), ref y);
             if (selDpi.Indice < 0) selDpi.Selecionar(Config.ResolucaoPadrao);
             selTamanho.Alterado += (s, e) => Prefs.Definir("tamanho", selTamanho.Indice);
-            selTipo.Alterado += (s, e) => Prefs.Definir("tipo", selTipo.Valor);
-            selModo.Alterado += (s, e) => { if (selModo.Indice >= 0) Prefs.Definir("modo", Config.Modos[selModo.Indice]); };
+            selTipo.Alterado += (s, e) => { Prefs.Definir("tipo", selTipo.Valor); AtualizarEstadoPdf(); };
+            selModo.Alterado += (s, e) =>
+            {
+                if (selModo.Indice < 0) return;
+                string m = Config.Modos[selModo.Indice];
+                Prefs.Definir("modo", m);
+                if (doc != null && doc.Modo != m) MudarModoDocumento(m);   // troca o modo depois de digitalizar
+            };
             selDpi.Alterado += (s, e) => Prefs.Definir("dpi", selDpi.Valor);
 
             selPasta = new Seletor
@@ -158,18 +167,22 @@ namespace Digitalizar
             btnPartilhar = new Botao(L.T("Compartilhar"), false, "");
             btnAbrir = new Botao(L.T("Abrir"), false, "");
             btnPasta = new Botao(L.T("Abrir pasta"), false, "");
+            btnNovo = new Botao(L.T("Novo PDF"), false, "\uE7C3") { Visible = false, Margin = new Padding(0, 0, S(10), 0) };
+            btnNovo.Click += (s, e) => NovoPdf();
+            acoes.Controls.Add(btnNovo);
             foreach (var b in new[] { btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta })
             {
                 b.Margin = new Padding(0, 0, S(10), 0);
                 acoes.Controls.Add(b);
             }
-            acoes.Resize += (s, e) =>
+            ajustarBotoes = () =>
             {
-                var bs = new[] { btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta };
+                var bs = new[] { btnNovo, btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta }.Where(b => b.Visible).ToArray();
                 int total = bs.Sum(b => b.LarguraCompleta + S(10));
                 bool so = total + S(24) > acoes.ClientSize.Width;
                 foreach (var b in bs) b.SoIcone(so);
             };
+            acoes.Resize += (s, e) => ajustarBotoes();
             btnEditar.Click += (s, e) => Editar();
             btnCopiar.Click += (s, e) => Copiar();
             btnPartilhar.Click += (s, e) => Partilhar();
@@ -185,6 +198,11 @@ namespace Digitalizar
             };
             direita.Controls.Add(lblVazio);
             direita.Controls.Add(preview);
+            faixa = new FaixaPaginas { Dock = DockStyle.Bottom, Visible = false };
+            faixa.PaginaEscolhida += i => EscolherPagina(i);
+            faixa.PaginaExcluir += i => ExcluirPagina(i);
+            faixa.Adicionar += (s, e) => { if (btnScan.Enabled) IniciarScan(); };
+            direita.Controls.Add(faixa);
             direita.Controls.Add(acoes);
 
             AcoesAtivas(false);
@@ -258,7 +276,7 @@ namespace Digitalizar
 
         void AcoesAtivas(bool ativo)
         {
-            btnEditar.Enabled = btnCopiar.Enabled = btnPartilhar.Enabled = btnAbrir.Enabled = btnPasta.Enabled = ativo;
+            btnEditar.Enabled = btnCopiar.Enabled = btnPartilhar.Enabled = btnAbrir.Enabled = btnPasta.Enabled = btnNovo.Enabled = ativo;
         }
 
         void Ocupado(bool ocupado, string texto)
@@ -320,6 +338,8 @@ namespace Digitalizar
             }
         }
 
+        string ModoSelecionado() { return Config.Modos[Math.Max(0, selModo.Indice)]; }
+
         void IniciarScan()
         {
             int idx = selScanner.Indice;
@@ -329,14 +349,15 @@ namespace Digitalizar
                 return;
             }
             var sc = scanners[idx];
-            string modo = Config.Modos[Math.Max(0, selModo.Indice)];
+            string modo = ModoSelecionado();
             int dpi = int.Parse(selDpi.Valor);
             string tipo = selTipo.Valor;
             string destino = pasta;
             var tam = Config.Tamanhos[Math.Max(0, selTamanho.Indice)];
 
-            if (dpi >= 1200 && modo == "Cor" &&
-                MessageBox.Show(this, L.T("1200 DPI em cor gera um arquivo muito grande e demora vários minutos. Continuar?"),
+            // o scanner sempre digitaliza em cor: assim dá para trocar para cinza ou preto e branco (e voltar) depois
+            if (dpi >= 1200 &&
+                MessageBox.Show(this, L.T("1200 DPI gera um arquivo muito grande e demora vários minutos. Continuar?"),
                     "Digitalizar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
 
@@ -346,10 +367,9 @@ namespace Digitalizar
             {
                 try
                 {
-                    Bitmap img = Wia.Digitalizar(sc.Id, modo, dpi, tam.L, tam.A);
-                    BeginInvoke((Action)(() => lblStatus.Text = L.T("Salvando…")));
-                    string caminho = Imagens.Guardar(img, destino, tipo, modo, dpi);
-                    BeginInvoke((Action)(() => Concluido(img, caminho, L.T("Salvo:") + " ")));
+                    Bitmap img = Wia.Digitalizar(sc.Id, "Cor", dpi, tam.L, tam.A);
+                    var pag = new Pagina(img, dpi, modo);
+                    BeginInvoke((Action)(() => PaginaPronta(pag, tipo, destino)));
                 }
                 catch (Exception e)
                 {
@@ -359,17 +379,102 @@ namespace Digitalizar
             });
         }
 
-        void Concluido(Bitmap img, string caminho, string prefixo)
+        /// A digitalização terminou: entra no documento (nova página do PDF aberto, ou documento novo) e é salva
+        void PaginaPronta(Pagina pag, string tipo, string destino)
         {
-            Ocupado(false, prefixo + Path.GetFileName(caminho));
-            var antiga = ultimaImagem;
-            ultimaImagem = img;
-            ultimoArquivo = caminho;
+            Ocupado(false, null);
+            preview.Image = null;
+            bool somar = tipo == "PDF" && doc != null && doc.EhPdf;
+            if (!somar)
+            {
+                if (doc != null) doc.Dispose();
+                doc = new Documento(tipo, ModoSelecionado());
+            }
+            doc.Adicionar(pag);
+            string erro = Gravar(destino);
+            Mostrar();
+            if (erro != null) { Falhou(erro); return; }
+            lblStatus.Text = L.T("Salvo:") + " " + Path.GetFileName(doc.Caminho) + (doc.EhPdf ? " · " + L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count) : "")
+                + "\n" + L.T("Dica: troque o modo de cor para converter esta imagem.");
+        }
+
+        string Gravar() { return Gravar(pasta); }
+
+        string Gravar(string destino)
+        {
+            try { doc.Salvar(destino); return null; }
+            catch (Exception e) { return e.Message; }
+        }
+
+        /// Atualiza a pré-visualização, a faixa de páginas e os botões conforme o documento aberto
+        void Mostrar()
+        {
+            var img = doc == null ? null : doc.ImagemAtual;
             preview.Image = img;
-            preview.Visible = true;
-            lblVazio.Visible = false;
-            if (antiga != null && antiga != img) antiga.Dispose();
-            AcoesAtivas(true);
+            preview.Visible = img != null;
+            lblVazio.Visible = img == null;
+            faixa.Doc = doc;
+            AtualizarEstadoPdf();
+            faixa.Atualizar();
+            if (faixa.Visible) faixa.GarantirVisivel(doc.Indice);
+            AcoesAtivas(img != null);
+        }
+
+        /// Páginas só funcionam com PDF: o botão vira "Adicionar página" enquanto há um PDF aberto e o tipo PDF está escolhido
+        void AtualizarEstadoPdf()
+        {
+            bool somar = selTipo.Valor == "PDF" && doc != null && doc.EhPdf;
+            btnScan.Text = somar ? L.T("Adicionar página") : L.T("Digitalizar (ação)");
+            if (faixa != null) faixa.Visible = somar;
+            btnNovo.Visible = somar;
+            if (ajustarBotoes != null) ajustarBotoes();
+        }
+
+        void MudarModoDocumento(string modo)
+        {
+            Cursor = Cursors.WaitCursor;
+            try
+            {
+                preview.Image = null;
+                doc.MudarModo(modo);
+                string erro = Gravar();
+                Mostrar();
+                if (erro != null) Falhou(erro);
+                else lblStatus.Text = L.T("Modo de cor alterado e salvo:") + " " + Path.GetFileName(doc.Caminho);
+            }
+            finally { Cursor = Cursors.Default; }
+        }
+
+        void EscolherPagina(int i)
+        {
+            if (doc == null) return;
+            preview.Image = null;
+            doc.Selecionar(i);
+            Mostrar();
+            lblStatus.Text = L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count);
+        }
+
+        void ExcluirPagina(int i)
+        {
+            if (doc == null || doc.Paginas.Count < 2) return;
+            if (MessageBox.Show(this, L.F("Excluir a página {0}?", i + 1), L.T("Excluir página"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            preview.Image = null;
+            doc.Excluir(i);
+            string erro = Gravar();
+            Mostrar();
+            if (erro != null) Falhou(erro);
+            else lblStatus.Text = L.T("Salvo:") + " " + Path.GetFileName(doc.Caminho) + " · " + L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count);
+        }
+
+        /// Fecha o PDF aberto (o arquivo continua salvo) para começar outro
+        void NovoPdf()
+        {
+            if (doc == null) return;
+            preview.Image = null;
+            doc.Dispose();
+            doc = null;
+            Mostrar();
+            lblStatus.Text = L.T("Pronto para um novo PDF.");
         }
 
         void Falhou(string msg)
@@ -381,18 +486,28 @@ namespace Digitalizar
         // ------------------------------------------------ ações
         void Editar()
         {
-            if (ultimaImagem == null) return;
-            using (var ed = new Editor(ultimaImagem, ultimoArquivo))
+            if (doc == null || doc.ImagemAtual == null) return;
+            bool pdf = doc.EhPdf;
+            using (var ed = new Editor(doc.ImagemAtual, doc.Caminho, pdf))
             {
                 if (ed.ShowDialog(this) == DialogResult.OK && ed.ResultadoImagem != null)
-                    Concluido(ed.ResultadoImagem, ed.ResultadoCaminho, L.T("Editado e salvo:") + " ");
+                {
+                    preview.Image = null;
+                    doc.SubstituirAtual(ed.ResultadoImagem);
+                    string erro = null;
+                    if (pdf) erro = Gravar();
+                    else if (ed.ResultadoCaminho != null) doc.Caminho = ed.ResultadoCaminho;
+                    Mostrar();
+                    if (erro != null) Falhou(erro);
+                    else lblStatus.Text = L.T("Editado e salvo:") + " " + Path.GetFileName(doc.Caminho);
+                }
             }
         }
 
         void Copiar()
         {
-            if (ultimaImagem == null) return;
-            try { Clipboard.SetImage(ultimaImagem); lblStatus.Text = L.T("Imagem copiada. Cole com Ctrl+V."); }
+            if (doc == null || doc.ImagemAtual == null) return;
+            try { Clipboard.SetImage(doc.ImagemAtual); lblStatus.Text = L.T("Imagem copiada. Cole com Ctrl+V."); }
             catch (Exception e) { MessageBox.Show(this, e.Message, L.T("Copiar imagem"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
@@ -475,6 +590,7 @@ namespace Digitalizar
             using (var g = Graphics.FromHwnd(IntPtr.Zero)) Tema.Escala = g.DpiX / 96f;
             Tema.Carregar();
             L.Iniciar();
+            Atualizador.LimparAntigos();
             Application.Run(new Janela());
         }
     }

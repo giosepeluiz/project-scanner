@@ -32,7 +32,8 @@ public class Provedor extends ContentProvider {
 
     @Override public String getType(Uri u) {
         String n = u.getLastPathSegment() == null ? "" : u.getLastPathSegment().toLowerCase();
-        return n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".png") ? "image/png" : "image/jpeg";
+        return n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".png") ? "image/png"
+                : n.endsWith(".apk") ? "application/vnd.android.package-archive" : "image/jpeg";
     }
 
     @Override public ParcelFileDescriptor openFile(Uri u, String modo) throws FileNotFoundException {

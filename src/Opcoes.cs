@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Digitalizar
@@ -20,10 +21,10 @@ namespace Digitalizar
             MinimizeBox = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterParent;
-            Size = new Size(S(560), S(720));
+            Size = new Size(S(560), Math.Min(S(900), Screen.PrimaryScreen.WorkingArea.Height - S(30)));
             MinimumSize = Size;
 
-            var corpo = new Panel { Dock = DockStyle.Fill, BackColor = Tema.BG, Padding = new Padding(S(24), S(8), S(24), S(16)) };
+            var corpo = new Panel { Dock = DockStyle.Fill, BackColor = Tema.BG, Padding = new Padding(S(24), S(8), S(24), S(16)), AutoScroll = true };
             Controls.Add(corpo);
             int y = S(8);
 
@@ -100,6 +101,49 @@ namespace Digitalizar
             };
             cartaoCor.Controls.Add(nota);
             y += cartaoCor.Height + S(20);
+
+            // ---- atualizações
+            corpo.Controls.Add(Titulo(L.T("Atualizações"), y)); y += S(34);
+            var cartaoAtu = new Panel { Left = S(24), Top = y, Width = S(496), Height = S(138), BackColor = Tema.CARD };
+            corpo.Controls.Add(cartaoAtu);
+            var swAuto = new Interruptor(L.T("Verificar automaticamente")) { Left = S(16), Top = S(12), Ligado = Atualizador.AutoLigado };
+            swAuto.Alterado += (s, e) => Atualizador.AutoLigado = swAuto.Ligado;
+            cartaoAtu.Controls.Add(swAuto);
+            var lblAtu = new Label
+            {
+                Text = L.F("Versão instalada: {0}", Atualizador.VersaoTexto), ForeColor = Tema.TXT2, BackColor = Tema.CARD,
+                Font = Tema.Fonte(9.5f), Left = S(16), Top = S(50), Width = S(464), Height = S(40)
+            };
+            cartaoAtu.Controls.Add(lblAtu);
+            var verificar = new Botao(L.T("Verificar agora"), false) { Left = S(16), Top = S(88) };
+            verificar.Click += (s, e) =>
+            {
+                verificar.Enabled = false;
+                lblAtu.Text = L.T("Procurando atualizações…");
+                var t = new Thread(() =>
+                {
+                    InfoAtualizacao info = null; string erro = null;
+                    try { info = Atualizador.Consultar(); } catch (Exception ex) { erro = ex.Message; }
+                    try
+                    {
+                        BeginInvoke((Action)(() =>
+                        {
+                            verificar.Enabled = true;
+                            if (erro != null) lblAtu.Text = L.T("Não foi possível verificar as atualizações.") + "\n" + erro;
+                            else if (info.Nova)
+                            {
+                                lblAtu.Text = L.F("Nova versão disponível: {0}", info.Versao);
+                                Atualizador.Mostrar(this, info);
+                            }
+                            else lblAtu.Text = L.F("Você já está na versão mais recente ({0}).", Atualizador.VersaoTexto);
+                        }));
+                    }
+                    catch { }
+                }) { IsBackground = true };
+                t.Start();
+            };
+            cartaoAtu.Controls.Add(verificar);
+            y += cartaoAtu.Height + S(20);
 
             var fechar = new Botao(L.T("Fechar"), true) { Width = S(120), Top = y, Left = S(400) };
             fechar.Click += (s, e) => Close();

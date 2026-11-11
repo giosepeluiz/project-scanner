@@ -244,6 +244,8 @@ public class Principal extends Activity {
         if (Prefs.logico("painel_recolhido", false)) painel.setVisibility(View.GONE);
         definirOrigem(origem);
         atualizarPrevia();
+        Atualizador.limpar(this);
+        Atualizador.verificarAuto(this);
     }
 
     LinearLayout.LayoutParams pesoMargem() {
@@ -360,9 +362,10 @@ public class Principal extends Activity {
     void atualizarPaginas() {
         final Documento d = Sessao.doc;
         boolean pdf = "PDF".equals(tipo());
-        if (d == null || Sessao.imagem == null || (!pdf && d.paginas.size() < 2)) { faixa.setVisibility(View.GONE); return; }
+        // páginas só existem com o tipo PDF escolhido; JPEG e PNG guardam a imagem que está na tela
+        if (d == null || Sessao.imagem == null || !pdf) { faixa.setVisibility(View.GONE); return; }
         faixa.setVisibility(View.VISIBLE);
-        btnNovaPagina.setVisibility(pdf ? View.VISIBLE : View.GONE);
+        btnNovaPagina.setVisibility(View.VISIBLE);
         int n = d.paginas.size();
         tituloPaginas.setText(L.T("Páginas") + " · " + L.F("Página {0} de {1}", d.atual + 1, n));
         miniaturas.removeAllViews();

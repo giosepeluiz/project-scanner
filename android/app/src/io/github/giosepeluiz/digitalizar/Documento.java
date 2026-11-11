@@ -169,13 +169,13 @@ public final class Documento {
      */
     public void salvar(Context ctx, String tipo) throws IOException {
         boolean pdf = "PDF".equals(tipo);
-        int n = pdf ? 1 : paginas.size();
+        int n = 1;                      // PDF: um arquivo com todas as páginas; JPEG/PNG: só a imagem que está na tela
         boolean substituir = tipo.equals(tipoSalvo) && uris.size() == n;
         if (!substituir) { uris.clear(); nomes.clear(); }
         String base = Imagens.nomeNovo(tipo);
         base = base.substring(0, base.lastIndexOf('.'));
         for (int i = 0; i < n; i++) {
-            byte[] dados = pdf ? pdf() : imagem(i, tipo);
+            byte[] dados = pdf ? pdf() : imagem(atual, tipo);
             if (substituir) Imagens.escreverUri(ctx, uris.get(i), dados, "wt");
             else {
                 String nome = base + (n > 1 ? "_p" + (i + 1) : "") + "." + Imagens.extensao(tipo);

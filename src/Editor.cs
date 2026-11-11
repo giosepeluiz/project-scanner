@@ -196,6 +196,7 @@ namespace Digitalizar
         Bitmap proxy, proxyRot;
         int anguloCache = int.MinValue;
         bool alterado, salvando;
+        readonly bool soImagem;
 
         public Bitmap ResultadoImagem;
         public string ResultadoCaminho;
@@ -214,8 +215,10 @@ namespace Digitalizar
         static readonly CultureInfo INV = CultureInfo.InvariantCulture;
         static int S(int v) { return Tema.S(v); }
 
-        public Editor(Bitmap img, string arquivo)
+        /// soImagem: só devolve a imagem editada (usado nas páginas do PDF, que o programa grava depois)
+        public Editor(Bitmap img, string arquivo, bool soImagem = false)
         {
+            this.soImagem = soImagem;
             original = img;
             this.arquivo = arquivo;
             dpi = (int)Math.Round(img.HorizontalResolution);
@@ -383,14 +386,14 @@ namespace Digitalizar
                 Dock = DockStyle.Right, FlowDirection = FlowDirection.RightToLeft, BackColor = Tema.BG,
                 Width = S(560), Padding = new Padding(0, S(14), S(12), 0), WrapContents = false
             };
-            var bSalvar = new Botao(L.T("Salvar"), true) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
+            var bSalvar = new Botao(L.T(soImagem ? "Aplicar" : "Salvar"), true) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
             var bComo = new Botao(L.T("Salvar como…"), false) { Width = S(150), Margin = new Padding(S(8), 0, 0, 0) };
             var bCancelar = new Botao(L.T("Cancelar"), false) { Width = S(120), Margin = new Padding(S(8), 0, 0, 0) };
             bSalvar.Click += (s, e) => Salvar(arquivo);
             bComo.Click += (s, e) => SalvarComo();
             bCancelar.Click += (s, e) => Close();
             direita.Controls.Add(bSalvar);
-            direita.Controls.Add(bComo);
+            if (!soImagem) direita.Controls.Add(bComo);
             direita.Controls.Add(bCancelar);
             rodape.Controls.Add(direita);
         }
@@ -539,9 +542,9 @@ namespace Digitalizar
             try
             {
                 Bitmap r = RenderFinal();
-                Imagens.GuardarEm(r, caminho, dpi);
+                if (!soImagem) Imagens.GuardarEm(r, caminho, dpi);
                 ResultadoImagem = r;
-                ResultadoCaminho = caminho;
+                ResultadoCaminho = soImagem ? null : caminho;
                 salvando = true;
                 DialogResult = DialogResult.OK;
                 Close();
@@ -577,7 +580,7 @@ namespace Digitalizar
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (keyData == (Keys.Control | Keys.S)) { Salvar(arquivo); return true; }
-            if (keyData == (Keys.Control | Keys.Shift | Keys.S)) { SalvarComo(); return true; }
+            if (keyData == (Keys.Control | Keys.Shift | Keys.S)) { if (!soImagem) SalvarComo(); return true; }
             if (keyData == Keys.Enter && tela.ModoRecorte) { AlternarRecorte(); return true; }
             if (keyData == Keys.Escape)
             {

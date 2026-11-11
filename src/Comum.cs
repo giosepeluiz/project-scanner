@@ -24,9 +24,10 @@ namespace Digitalizar
     static class Config
     {
         public static readonly bool Windows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-        public static readonly string PastaPadrao = Windows
-            ? @"C:\Users\giosepeluiz\OneDrive\Documents\Scanned Documents"
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Scanned Documents");
+        // Documentos\Scanned Documents do usuário atual (no Windows e no Linux)
+        public static readonly string PastaPadrao = Path.Combine(
+            Windows ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+            "Scanned Documents");
         public static readonly string[] Tipos = { "JPEG", "PNG", "PDF" };
         public const string TipoPadrao = "JPEG";
         public static readonly string[] Modos = { "Cor", "Cinza", "Preto e branco" };
@@ -411,7 +412,8 @@ namespace Digitalizar
             }
         }
 
-        public static string Guardar(Bitmap b, string pasta, string tipo, string modo, int dpi)
+        /// Nome novo e livre dentro da pasta (Scan_2026-11-11_103000.ext)
+        public static string NovoCaminho(string pasta, string tipo)
         {
             Directory.CreateDirectory(pasta);
             string ext = tipo == "JPEG" ? ".jpg" : tipo == "PNG" ? ".png" : ".pdf";
@@ -419,14 +421,26 @@ namespace Digitalizar
             string caminho = Path.Combine(pasta, nomeBase + ext);
             int n = 1;
             while (File.Exists(caminho)) { caminho = Path.Combine(pasta, nomeBase + "_" + n + ext); n++; }
-
-            if (tipo == "JPEG")
-                File.WriteAllBytes(caminho, Jpeg(b, 92));
-            else if (tipo == "PNG")
-                b.Save(caminho, ImageFormat.Png);
-            else
-                Pdf.Escrever(caminho, b, modo, dpi);
             return caminho;
+        }
+
+        /// Cópia da imagem original (sempre em cor) no modo pedido: Cor, Cinza ou Preto e branco
+        public static Bitmap Renderizar(Bitmap original, string modo)
+        {
+            Bitmap r = Copia24(original);
+            r.SetResolution(original.HorizontalResolution, original.VerticalResolution);
+            if (modo == "Cinza") ConverterCinza(r);
+            else if (modo == "Preto e branco") ConverterPB(r);
+            return r;
+        }
+
+        /// Grava o PDF (uma ou várias páginas) em arquivo temporário e troca só no fim
+        public static void GuardarPdf(string caminho, IList<PaginaPdf> paginas)
+        {
+            string tmp = caminho + ".tmp";
+            Pdf.Escrever(tmp, paginas);
+            if (File.Exists(caminho)) File.Delete(caminho);
+            File.Move(tmp, caminho);
         }
 
         // ---------------------------------------------------- edição
@@ -607,50 +621,75 @@ namespace Digitalizar
     }
 
     // ============================================================ PDF (gerador mínimo)
+    /// Página já codificada para o PDF (JPEG para cor/cinza, 1 bit comprimido para preto e branco)
+    class PaginaPdf
+    {
+        public byte[] Dados;
+        public string Filtro, Espaco;
+        public int Bits, Largura, Altura;
+        public double Dpi;
+    }
+
     static class Pdf
     {
-        public static void Escrever(string caminho, Bitmap b, string modo, int dpi)
+        public static PaginaPdf Codificar(Bitmap b, string modo, int dpi)
         {
-            byte[] dados;
-            string filtro, espaco;
-            int bits;
+            var p = new PaginaPdf { Largura = b.Width, Altura = b.Height, Dpi = dpi };
             if (modo == "Preto e branco")
             {
-                dados = Zlib(BitsPB(b));
-                filtro = "/FlateDecode"; espaco = "/DeviceGray"; bits = 1;
+                p.Dados = Zlib(BitsPB(b));
+                p.Filtro = "/FlateDecode"; p.Espaco = "/DeviceGray"; p.Bits = 1;
             }
             else
             {
-                dados = Imagens.Jpeg(b, 90);
-                filtro = "/DCTDecode"; espaco = "/DeviceRGB"; bits = 8;
+                p.Dados = Imagens.Jpeg(b, 90);
+                p.Filtro = "/DCTDecode"; p.Espaco = "/DeviceRGB"; p.Bits = 8;
             }
+            return p;
+        }
 
+        public static void Escrever(string caminho, Bitmap b, string modo, int dpi)
+        {
+            Escrever(caminho, new List<PaginaPdf> { Codificar(b, modo, dpi) });
+        }
+
+        public static void Escrever(string caminho, IList<PaginaPdf> paginas)
+        {
             var inv = System.Globalization.CultureInfo.InvariantCulture;
-            double wPt = b.Width * 72.0 / dpi, hPt = b.Height * 72.0 / dpi;
-            string W = wPt.ToString("0.##", inv), H = hPt.ToString("0.##", inv);
-            string conteudo = "q " + W + " 0 0 " + H + " 0 0 cm /Im0 Do Q";
-
+            int n = paginas.Count;
             var offsets = new List<long>();
             using (var fs = new FileStream(caminho, FileMode.Create))
             {
                 Action<string> w = s => { byte[] x = Encoding.ASCII.GetBytes(s); fs.Write(x, 0, x.Length); };
                 w("%PDF-1.4\n%\u00E2\u00E3\u00CF\u00D3\n");
                 offsets.Add(fs.Position); w("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-                offsets.Add(fs.Position); w("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
-                offsets.Add(fs.Position); w("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H +
-                    "] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n");
-                offsets.Add(fs.Position);
-                w("4 0 obj\n<< /Type /XObject /Subtype /Image /Width " + b.Width + " /Height " + b.Height +
-                  " /ColorSpace " + espaco + " /BitsPerComponent " + bits + " /Filter " + filtro +
-                  " /Length " + dados.Length + " >>\nstream\n");
-                fs.Write(dados, 0, dados.Length);
-                w("\nendstream\nendobj\n");
-                offsets.Add(fs.Position);
-                w("5 0 obj\n<< /Length " + conteudo.Length + " >>\nstream\n" + conteudo + "\nendstream\nendobj\n");
+                var kids = new StringBuilder();
+                for (int i = 0; i < n; i++) kids.Append((3 + 3 * i) + " 0 R ");
+                offsets.Add(fs.Position); w("2 0 obj\n<< /Type /Pages /Kids [" + kids.ToString().TrimEnd() + "] /Count " + n + " >>\nendobj\n");
+                for (int i = 0; i < n; i++)
+                {
+                    PaginaPdf p = paginas[i];
+                    double wPt = p.Largura * 72.0 / p.Dpi, hPt = p.Altura * 72.0 / p.Dpi;
+                    string W = wPt.ToString("0.##", inv), H = hPt.ToString("0.##", inv);
+                    string conteudo = "q " + W + " 0 0 " + H + " 0 0 cm /Im0 Do Q";
+                    int pg = 3 + 3 * i, im = pg + 1, ct = pg + 2;
+                    offsets.Add(fs.Position);
+                    w(pg + " 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H +
+                      "] /Resources << /XObject << /Im0 " + im + " 0 R >> >> /Contents " + ct + " 0 R >>\nendobj\n");
+                    offsets.Add(fs.Position);
+                    w(im + " 0 obj\n<< /Type /XObject /Subtype /Image /Width " + p.Largura + " /Height " + p.Altura +
+                      " /ColorSpace " + p.Espaco + " /BitsPerComponent " + p.Bits + " /Filter " + p.Filtro +
+                      " /Length " + p.Dados.Length + " >>\nstream\n");
+                    fs.Write(p.Dados, 0, p.Dados.Length);
+                    w("\nendstream\nendobj\n");
+                    offsets.Add(fs.Position);
+                    w(ct + " 0 obj\n<< /Length " + conteudo.Length + " >>\nstream\n" + conteudo + "\nendstream\nendobj\n");
+                }
                 long xref = fs.Position;
-                w("xref\n0 6\n0000000000 65535 f \n");
+                int total = 3 + 3 * n;
+                w("xref\n0 " + total + "\n0000000000 65535 f \n");
                 foreach (long o in offsets) w(o.ToString("D10") + " 00000 n \n");
-                w("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+                w("trailer\n<< /Size " + total + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
             }
         }
 

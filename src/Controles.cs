@@ -696,4 +696,155 @@ namespace Digitalizar
 
         protected override void OnMouseUp(MouseEventArgs e) { arrastando = -1; }
     }
+
+    // ---------------------------------------------------------------- faixa de páginas do PDF
+    class FaixaPaginas : ControleDesenhado
+    {
+        public Documento Doc;
+        public event Action<int> PaginaEscolhida;
+        public event Action<int> PaginaExcluir;
+        public event EventHandler Adicionar;
+
+        int desl, sobre = -2;           // sobre: -1 = botão "+", >= 0 = página
+        static int S(int v) { return Tema.S(v); }
+
+        public FaixaPaginas()
+        {
+            Height = S(128);
+            Cursor = Cursors.Default;
+        }
+
+        int LargItem { get { return S(72); } }
+        int AltItem { get { return S(92); } }
+        int Espaco { get { return S(12); } }
+
+        Rectangle Retangulo(int i)   // i == número de páginas: botão "+"
+        {
+            return new Rectangle(S(4) + i * (LargItem + Espaco) - desl, S(6), LargItem, AltItem);
+        }
+
+        Rectangle BotaoX(Rectangle r)
+        {
+            int d = S(20);
+            return new Rectangle(r.Right - d - S(3), r.Top + S(3), d, d);
+        }
+
+        int Total { get { return Doc == null ? 0 : Doc.Paginas.Count; } }
+
+        int LarguraTotal { get { return S(8) + (Total + 1) * (LargItem + Espaco); } }
+
+        void Limitar()
+        {
+            int max = Math.Max(0, LarguraTotal - Width);
+            desl = Math.Max(0, Math.Min(max, desl));
+        }
+
+        public void GarantirVisivel(int i)
+        {
+            var r = Retangulo(i);
+            if (r.Left < 0) desl += r.Left - S(8);
+            else if (r.Right > Width) desl += r.Right - Width + S(8);
+            Limitar();
+            Invalidate();
+        }
+
+        public void Atualizar() { Limitar(); Invalidate(); }
+
+        int Acertar(Point pt, out bool noX)
+        {
+            noX = false;
+            for (int i = 0; i <= Total; i++)
+            {
+                var r = Retangulo(i);
+                if (!r.Contains(pt)) continue;
+                if (i < Total && Total > 1 && BotaoX(r).Contains(pt) && (i == Doc.Indice || i == sobre)) noX = true;
+                return i == Total ? -1 : i;
+            }
+            return -2;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.Clear(Tema.FundoPai(this));
+            if (Doc == null) return;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            var fonte = Tema.Fonte(9f);
+            for (int i = 0; i <= Total; i++)
+            {
+                var r = Retangulo(i);
+                if (r.Right < 0 || r.Left > Width) continue;
+                if (i == Total)
+                {
+                    using (var p = Tema.Arredondado(new RectangleF(r.X, r.Y, r.Width - 1, r.Height - 1), S(6)))
+                    {
+                        using (var b = new SolidBrush(sobre == -1 ? Tema.CARD_HOVER : Tema.CARD)) g.FillPath(b, p);
+                        using (var pen = new Pen(Tema.BOTAO_BORDA) { DashStyle = DashStyle.Dash }) g.DrawPath(pen, p);
+                    }
+                    TextRenderer.DrawText(g, "+", Tema.Fonte(22f), r, Tema.TXT2, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+                    continue;
+                }
+                bool sel = i == Doc.Indice;
+                using (var p = Tema.Arredondado(new RectangleF(r.X, r.Y, r.Width - 1, r.Height - 1), S(6)))
+                {
+                    using (var b = new SolidBrush(Tema.CARD)) g.FillPath(b, p);
+                    var mini = Doc.Paginas[i].Mini;
+                    if (mini != null)
+                    {
+                        var area = Rectangle.Inflate(r, -S(5), -S(5));
+                        double esc = Math.Min(area.Width / (double)mini.Width, area.Height / (double)mini.Height);
+                        int w = Math.Max(1, (int)(mini.Width * esc)), h = Math.Max(1, (int)(mini.Height * esc));
+                        var d = new Rectangle(area.X + (area.Width - w) / 2, area.Y + (area.Height - h) / 2, w, h);
+                        g.DrawImage(mini, d);
+                        using (var pen = new Pen(Tema.BOTAO_BORDA)) g.DrawRectangle(pen, d);
+                    }
+                    using (var pen = new Pen(sel ? Tema.AZUL : Tema.BOTAO_BORDA, sel ? 2.5f : 1f)) g.DrawPath(pen, p);
+                }
+                TextRenderer.DrawText(g, (i + 1).ToString(), fonte, new Rectangle(r.X, r.Bottom + S(2), r.Width, S(20)),
+                    sel ? Tema.TXT : Tema.TXT2, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.NoPadding);
+                if (Total > 1 && (sel || sobre == i))
+                {
+                    var x = BotaoX(r);
+                    using (var b = new SolidBrush(Color.FromArgb(220, 30, 30, 30))) g.FillEllipse(b, x);
+                    using (var pen = new Pen(Color.White, 1.6f))
+                    {
+                        int m = S(6);
+                        g.DrawLine(pen, x.Left + m, x.Top + m, x.Right - m, x.Bottom - m);
+                        g.DrawLine(pen, x.Right - m, x.Top + m, x.Left + m, x.Bottom - m);
+                    }
+                }
+            }
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            bool x; int i = Acertar(e.Location, out x);
+            if (i != sobre) { sobre = i; Invalidate(); }
+            Cursor = i == -2 ? Cursors.Default : Cursors.Hand;
+            base.OnMouseMove(e);
+        }
+
+        protected override void OnMouseLeave(EventArgs e) { sobre = -2; Invalidate(); base.OnMouseLeave(e); }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (e.Button != MouseButtons.Left) return;
+            bool noX; int i = Acertar(e.Location, out noX);
+            if (i == -1) { if (Adicionar != null) Adicionar(this, EventArgs.Empty); }
+            else if (i >= 0 && noX) { if (PaginaExcluir != null) PaginaExcluir(i); }
+            else if (i >= 0 && i != Doc.Indice) { if (PaginaEscolhida != null) PaginaEscolhida(i); }
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            desl -= Math.Sign(e.Delta) * (LargItem + Espaco);
+            Limitar();
+            Invalidate();
+            base.OnMouseWheel(e);
+        }
+
+        protected override void OnResize(EventArgs e) { base.OnResize(e); Limitar(); }
+    }
 }
