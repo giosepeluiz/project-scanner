@@ -77,7 +77,7 @@ namespace Digitalizar
                 using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("idiomas.tsv"))
                 using (var r = new StreamReader(s, Encoding.UTF8))
                 {
-                    string[] cab = r.ReadLine().Split('\t');
+                    string[] cab = r.ReadLine().Split(new[] { '\t' });
                     int col = Array.IndexOf(cab, codigo);
                     int ing = Array.IndexOf(cab, "en-US");   // reserva para traduções em falta
                     if (col < 1) return t;
@@ -85,7 +85,7 @@ namespace Digitalizar
                     while ((linha = r.ReadLine()) != null)
                     {
                         if (linha.Length == 0 || linha[0] == '#') continue;
-                        var p = linha.Split('\t');
+                        var p = linha.Split(new[] { '\t' });
                         if (p.Length > col && p[col].Length > 0) t[Des(p[0])] = Des(p[col]);
                         else if (!codigo.StartsWith("pt") && ing > 0 && p.Length > ing && p[ing].Length > 0) t[Des(p[0])] = Des(p[ing]);
                     }

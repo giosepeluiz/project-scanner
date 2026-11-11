@@ -222,7 +222,7 @@ namespace Digitalizar
 
         void RestaurarJanela()
         {
-            var p = Prefs.Obter("janela", "").Split(',');
+            var p = Prefs.Obter("janela", "").Split(new[] { ',' });
             int x, y, w, h;
             if (p.Length < 5 || !int.TryParse(p[0], out x) || !int.TryParse(p[1], out y) || !int.TryParse(p[2], out w) || !int.TryParse(p[3], out h)) return;
             var r = new Rectangle(x, y, Math.Max(w, MinimumSize.Width), Math.Max(h, MinimumSize.Height));
@@ -271,7 +271,7 @@ namespace Digitalizar
         // ------------------------------------------------ estado
         void AtualizarPasta()
         {
-            string nome = Path.GetFileName(pasta.TrimEnd('\\'));
+            string nome = Path.GetFileName(pasta.TrimEnd(new[] { '\\' }));
             selPasta.ValorFixo = string.IsNullOrEmpty(nome) ? pasta : nome;
             selPasta.Subtitulo = pasta;
             selPasta.Invalidate();

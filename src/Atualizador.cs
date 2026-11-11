@@ -234,7 +234,7 @@ namespace Digitalizar
         static string LimparNotas(string md)
         {
             if (string.IsNullOrEmpty(md)) return "";
-            var linhas = md.Replace("\r", "").Split('\n');
+            var linhas = md.Replace("\r", "").Split(new[] { '\n' });
             var sb = new StringBuilder();
             foreach (var l0 in linhas)
             {

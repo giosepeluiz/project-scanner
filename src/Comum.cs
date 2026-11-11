@@ -293,7 +293,7 @@ namespace Digitalizar
             string saida = Executar("-L", null, out err);
             var lista = new List<ScannerInfo>();
             var rx = new System.Text.RegularExpressions.Regex("device `(.+?)' is an? (.+)");
-            foreach (var linha in saida.Split('\n'))
+            foreach (var linha in saida.Split(new[] { '\n' }))
             {
                 var m = rx.Match(linha);
                 if (m.Success) lista.Add(new ScannerInfo { Id = m.Groups[1].Value, Nome = m.Groups[2].Value.Trim() });
