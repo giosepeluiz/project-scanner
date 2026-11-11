@@ -64,6 +64,12 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 >
 > 💡 **Dica:** clique com o botão direito no `.zip` baixado → **Propriedades** → marque **Desbloquear** → OK, e só depois extraia. Assim o aviso nem aparece. O hash SHA-256 de cada arquivo está nos anexos da release, para você conferir. A [política de assinatura de código](CODE_SIGNING.md) explica como estamos tratando isso.
 
+### 🔏 Assinatura de código
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+O Digitalizar usa a assinatura de código gratuita da **SignPath Foundation** para projetos de código aberto. As versões assinadas serão publicadas aqui, em Releases, e compiladas automaticamente pelo GitHub Actions. Veja a [política de assinatura](CODE_SIGNING.md).
+
 ### 🐧 No Linux
 
 Você precisa do **Mono** (para rodar o programa) e do **SANE** (para falar com o scanner):
