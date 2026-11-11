@@ -11,3 +11,9 @@ obj/
 # Sistema
 Thumbs.db
 .DS_Store
+
+# Android
+android/build/
+android/keystore/
+*.jks
+*.apk

@@ -9,6 +9,7 @@
 [![Versão](https://img.shields.io/badge/versão-3.2.0-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Linux](https://img.shields.io/badge/Linux-SANE-fcc624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/giosepeluiz/project-scanner/releases/latest)
+[![Android](https://img.shields.io/badge/Android-1.2.0-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.2.0)
 [![Licença MIT](https://img.shields.io/badge/licença-MIT-6ccb5f?style=for-the-badge)](LICENSE)
 
 **[⬇️ Baixar](#️-download)** · **[📖 Como usar](#-como-funciona-passo-a-passo)** · **[🕰️ Versões](#️-histórico-de-versões)** · **[🤝 Contribuir](#-código-aberto-contribua)**
@@ -17,7 +18,7 @@
 
 </div>
 
-> 🇬🇧 **English summary:** *Digitalizar* is a free, portable scanning app for Windows (WIA) and Linux (SANE). Scan to JPEG, PNG or PDF, copy the image right after scanning, and crop, rotate or fix it in a built-in quick editor. Available in 15 languages (it starts in your system language) and remembers all your settings. No installation needed. Open source under the MIT license.
+> 🇬🇧 **English summary:** *Digitalizar* is a free, portable scanning app for Windows (WIA) and Linux (SANE). Scan to JPEG, PNG or PDF, copy the image right after scanning, and crop, rotate or fix it in a built-in quick editor. Available in 15 languages (it starts in your system language) and remembers all your settings. No installation needed. There is also an **Android version** (network scanners + camera scan), see the [`android/`](android/) folder. Open source under the MIT license.
 
 ---
 
@@ -54,6 +55,8 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 | 🪟 **Windows 10/11** | [`Digitalizar-3.2.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.2.0/Digitalizar-3.2.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
 | 🐧 **Linux** | [`Digitalizar-3.2.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.2.0/Digitalizar-3.2.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
 
+| 📱 **Android 10+** | [`Digitalizar-1.2.0-android.apk`](https://github.com/giosepeluiz/project-scanner/releases/download/android-v1.2.0/Digitalizar-1.2.0-android.apk) | Baixe no celular e toque para instalar. Veja a [versão Android](#-versão-para-android) |
+
 > [!WARNING]
 > **Na primeira vez, o Windows pode mostrar um aviso azul ("O Windows protegeu o computador").** Isso acontece com todo programa sem assinatura digital paga. Clique em **Mais informações → Executar assim mesmo**. O código está todo aqui, aberto, para quem quiser conferir.
 
@@ -72,6 +75,20 @@ cd Digitalizar
 ```
 
 > As versões **1.0 e 2.x são só para Windows**. A versão para **Linux** existe a partir da **3.1** (a mais recente é a **3.2**).
+
+## 📱 Versão para Android
+
+O **Digitalizar para Android** (versão **1.2.0**, que acompanha as funções da 3.2 do PC) fica na pasta [`android/`](android/) e tem release própria, com a tag `android-v1.2.0`. Ele faz tudo o que o PC faz com scanners de rede e **também digitaliza pela câmera**: um detector de documentos acha a folha, endireita e transforma a foto num scan.
+
+| | 🖥️ PC | 📱 Android |
+|---|---|---|
+| Origem | Scanner USB ou de rede (WIA / SANE) | Scanner de rede (eSCL / AirScan) **ou câmera** |
+| Salvar | Automático | **Só ao tocar em "Salvar"** |
+| PDF | Um por digitalização | **Várias páginas**, com adicionar e excluir |
+| Cor | Escolhida antes | **Pode trocar depois** de digitalizar |
+| Linguagem | C# | Java puro, sem AndroidX |
+
+A comparação completa está no **[README do Android](android/README.md)** e o histórico no **[CHANGELOG do Android](android/CHANGELOG.md)**.
 
 ## 📖 Como funciona, passo a passo
 
@@ -238,6 +255,7 @@ mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
 | `src/Tema.cs` | Temas, cores de destaque e preferências guardadas (`config.ini`) |
 | `src/Idioma.cs` · `src/idiomas.tsv` | Sistema de idiomas e as traduções (uma coluna por idioma) |
 | `src/Opcoes.cs` · `src/Sobre.cs` | Janelas de Opções e Sobre |
+| `android/` | Versão Android (Java), com o próprio README, CHANGELOG e `build.sh` |
 
 Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`, `v3.2.0`), então dá para ver o código de qualquer uma delas.
 

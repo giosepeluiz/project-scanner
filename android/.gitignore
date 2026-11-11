@@ -1,0 +1,5 @@
+build/
+keystore/
+teste/*.jpg
+teste/casos.json
+teste/cls/
