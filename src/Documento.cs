@@ -60,6 +60,7 @@ namespace Digitalizar
         public readonly string Tipo;                 // JPEG, PNG ou PDF (o tipo escolhido quando o documento foi criado)
         public string Modo;                          // Cor, Cinza ou Preto e branco
         public string Caminho;                       // arquivo salvo (null até o primeiro salvamento)
+        public bool Pendente;                        // PDF com mudanças que ainda não foram gravadas (só o PDF espera o botão Salvar)
         public readonly List<Pagina> Paginas = new List<Pagina>();
         int atual;
 
@@ -98,6 +99,7 @@ namespace Digitalizar
             p.Aplicar(Modo);                    // a página nasceu no modo que estava escolhido no início da digitalização
             Paginas.Add(p);
             atual = Paginas.Count - 1;
+            Pendente = EhPdf;
         }
 
         /// Exclui uma página (a última não pode ser excluída)
@@ -110,6 +112,7 @@ namespace Digitalizar
             if (i < atual) atual--;
             if (atual >= Paginas.Count) atual = Paginas.Count - 1;
             if (eraAtual) Garantir(Paginas[atual]);
+            Pendente = EhPdf;
             return true;
         }
 
@@ -118,6 +121,7 @@ namespace Digitalizar
         {
             if (modo == Modo) return;
             Modo = modo;
+            Pendente = EhPdf;
             for (int i = 0; i < Paginas.Count; i++)
             {
                 var p = Paginas[i];
@@ -149,12 +153,14 @@ namespace Digitalizar
             p.ModoRender = Modo;
             p.Pdf = null;
             p.RefazerMini(Modo);
+            Pendente = EhPdf;
         }
 
         /// Grava no disco: JPEG/PNG gravam a imagem atual; PDF grava todas as páginas num só arquivo
         public void Salvar(string pasta)
         {
             if (Paginas.Count == 0) return;
+            Pendente = false;
             if (Caminho == null) Caminho = Imagens.NovoCaminho(pasta, Tipo);
             if (EhPdf)
             {

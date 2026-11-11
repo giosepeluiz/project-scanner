@@ -167,6 +167,7 @@ public final class Ui {
             addView(caixa, lp(MP, WC));
             caixa.setOnClickListener(new OnClickListener() {
                 public void onClick(View v) {
+                    if (bloqueado) return;
                     lista(a, tituloDialogo, itens, indice, new Escolha() {
                         public void escolhido(int i) { definir(i); if (aoEscolher != null) aoEscolher.escolhido(i); }
                     });
@@ -174,6 +175,9 @@ public final class Ui {
             });
         }
 
+        boolean bloqueado;
+        /** Trava ou destrava a escolha (o valor continua visível, só fica esmaecido) */
+        public void bloquear(boolean sim) { bloqueado = sim; setAlpha(sim ? 0.5f : 1f); }
         public void definirItens(String[] i, int sel) { itens = i; definir(sel); }
         public void definir(int i) {
             indice = i;

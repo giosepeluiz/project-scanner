@@ -25,7 +25,7 @@ namespace Digitalizar
         static int S(int v) { return Tema.S(v); }
 
         Seletor selScanner, selFonte, selTamanho, selTipo, selModo, selDpi, selPasta;
-        Botao btnScan, btnCopiar, btnAbrir, btnPasta, btnEditar, btnPartilhar, btnNovo;
+        Botao btnScan, btnCopiar, btnAbrir, btnPasta, btnEditar, btnPartilhar, btnNovo, btnSalvarPdf;
         FaixaPaginas faixa;
         Action ajustarBotoes;
         BotaoIcone btnMenu, btnOpcoes, btnScanCompacto;
@@ -67,7 +67,7 @@ namespace Digitalizar
                 Detectar();
                 Atualizador.VerificarAutomatico(this);
             };
-            FormClosing += (s, e) => GuardarJanela();
+            FormClosing += (s, e) => { if (!ResolverPendente()) { e.Cancel = true; return; } GuardarJanela(); };
         }
 
         Seletor NovoSeletor(Control pai, string titulo, string[] itens, string padrao, ref int y)
@@ -169,6 +169,9 @@ namespace Digitalizar
             btnPasta = new Botao(L.T("Abrir pasta"), false, "");
             btnNovo = new Botao(L.T("Novo PDF"), false, "\uE7C3") { Visible = false, Margin = new Padding(0, 0, S(10), 0) };
             btnNovo.Click += (s, e) => NovoPdf();
+            btnSalvarPdf = new Botao(L.T("Salvar PDF"), true, "\uE74E") { Visible = false, Margin = new Padding(0, 0, S(10), 0) };
+            btnSalvarPdf.Click += (s, e) => SalvarPdf();
+            acoes.Controls.Add(btnSalvarPdf);
             acoes.Controls.Add(btnNovo);
             foreach (var b in new[] { btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta })
             {
@@ -177,7 +180,7 @@ namespace Digitalizar
             }
             ajustarBotoes = () =>
             {
-                var bs = new[] { btnNovo, btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta }.Where(b => b.Visible).ToArray();
+                var bs = new[] { btnSalvarPdf, btnNovo, btnEditar, btnCopiar, btnPartilhar, btnAbrir, btnPasta }.Where(b => b.Visible).ToArray();
                 int total = bs.Sum(b => b.LarguraCompleta + S(10));
                 bool so = total + S(24) > acoes.ClientSize.Width;
                 foreach (var b in bs) b.SoIcone(so);
@@ -277,6 +280,7 @@ namespace Digitalizar
         void AcoesAtivas(bool ativo)
         {
             btnEditar.Enabled = btnCopiar.Enabled = btnPartilhar.Enabled = btnAbrir.Enabled = btnPasta.Enabled = btnNovo.Enabled = ativo;
+            btnSalvarPdf.Enabled = ativo && doc != null && doc.Pendente;
         }
 
         void Ocupado(bool ocupado, string texto)
@@ -354,6 +358,7 @@ namespace Digitalizar
             string tipo = selTipo.Valor;
             string destino = pasta;
             var tam = Config.Tamanhos[Math.Max(0, selTamanho.Indice)];
+            if (tipo != "PDF" && !ResolverPendente()) return;      // o PDF aberto vai ser substituído
 
             // o scanner sempre digitaliza em cor: assim dá para trocar para cinza ou preto e branco (e voltar) depois
             if (dpi >= 1200 &&
@@ -391,11 +396,42 @@ namespace Digitalizar
                 doc = new Documento(tipo, ModoSelecionado());
             }
             doc.Adicionar(pag);
+            if (doc.EhPdf)
+            {
+                // PDF não salva sozinho: as páginas se juntam e o arquivo só é gravado em "Salvar PDF"
+                destinoPdf = destino;
+                Mostrar();
+                lblStatus.Text = L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count) + " · " + L.T("Ainda não salvo. Clique em Salvar PDF para gravar o arquivo.");
+                return;
+            }
             string erro = Gravar(destino);
             Mostrar();
             if (erro != null) { Falhou(erro); return; }
-            lblStatus.Text = L.T("Salvo:") + " " + Path.GetFileName(doc.Caminho) + (doc.EhPdf ? " · " + L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count) : "")
-                + "\n" + L.T("Dica: troque o modo de cor para converter esta imagem.");
+            lblStatus.Text = L.T("Salvo:") + " " + Path.GetFileName(doc.Caminho) + "\n" + L.T("Dica: troque o modo de cor para converter esta imagem.");
+        }
+
+        string destinoPdf;
+
+        /// Grava o PDF aberto (com todas as páginas) e libera o botão
+        bool SalvarPdf()
+        {
+            if (doc == null || !doc.EhPdf) return true;
+            string erro = Gravar(destinoPdf ?? pasta);
+            Mostrar();
+            if (erro != null) { Falhou(erro); return false; }
+            lblStatus.Text = L.T("Salvo:") + " " + Path.GetFileName(doc.Caminho) + " · " + L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count);
+            return true;
+        }
+
+        /// Se há um PDF sem salvar, pergunta o que fazer. Devolve false se o usuário cancelou
+        bool ResolverPendente()
+        {
+            if (doc == null || !doc.Pendente) return true;
+            var r = MessageBox.Show(this, L.T("O PDF ainda não foi salvo. Salvar agora?"), "Digitalizar", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            if (r == DialogResult.Cancel) return false;
+            if (r == DialogResult.Yes) return SalvarPdf();
+            doc.Pendente = false;
+            return true;
         }
 
         string Gravar() { return Gravar(pasta); }
@@ -427,6 +463,12 @@ namespace Digitalizar
             btnScan.Text = somar ? L.T("Adicionar página") : L.T("Digitalizar (ação)");
             if (faixa != null) faixa.Visible = somar;
             btnNovo.Visible = somar;
+            btnSalvarPdf.Visible = somar;
+            btnSalvarPdf.Enabled = somar && doc.Pendente;
+            // com duas páginas ou mais o tipo fica travado em PDF; com uma só, destrava
+            bool travar = doc != null && doc.EhPdf && doc.Paginas.Count >= 2;
+            if (travar && selTipo.Valor != "PDF") selTipo.Selecionar("PDF");
+            selTipo.Enabled = !travar;
             if (ajustarBotoes != null) ajustarBotoes();
         }
 
@@ -437,9 +479,10 @@ namespace Digitalizar
             {
                 preview.Image = null;
                 doc.MudarModo(modo);
-                string erro = Gravar();
+                string erro = doc.EhPdf ? null : Gravar();
                 Mostrar();
                 if (erro != null) Falhou(erro);
+                else if (doc.EhPdf) lblStatus.Text = L.T("Modo de cor alterado.") + " " + L.T("Ainda não salvo. Clique em Salvar PDF para gravar o arquivo.");
                 else lblStatus.Text = L.T("Modo de cor alterado e salvo:") + " " + Path.GetFileName(doc.Caminho);
             }
             finally { Cursor = Cursors.Default; }
@@ -460,16 +503,14 @@ namespace Digitalizar
             if (MessageBox.Show(this, L.F("Excluir a página {0}?", i + 1), L.T("Excluir página"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
             preview.Image = null;
             doc.Excluir(i);
-            string erro = Gravar();
             Mostrar();
-            if (erro != null) Falhou(erro);
-            else lblStatus.Text = L.T("Salvo:") + " " + Path.GetFileName(doc.Caminho) + " · " + L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count);
+            lblStatus.Text = L.F("Página {0} de {1}", doc.Indice + 1, doc.Paginas.Count) + " · " + L.T("Ainda não salvo. Clique em Salvar PDF para gravar o arquivo.");
         }
 
         /// Fecha o PDF aberto (o arquivo continua salvo) para começar outro
         void NovoPdf()
         {
-            if (doc == null) return;
+            if (doc == null || !ResolverPendente()) return;
             preview.Image = null;
             doc.Dispose();
             doc = null;
@@ -494,11 +535,9 @@ namespace Digitalizar
                 {
                     preview.Image = null;
                     doc.SubstituirAtual(ed.ResultadoImagem);
-                    string erro = null;
-                    if (pdf) erro = Gravar();
-                    else if (ed.ResultadoCaminho != null) doc.Caminho = ed.ResultadoCaminho;
+                    if (!pdf && ed.ResultadoCaminho != null) doc.Caminho = ed.ResultadoCaminho;
                     Mostrar();
-                    if (erro != null) Falhou(erro);
+                    if (pdf) lblStatus.Text = L.T("Página editada.") + " " + L.T("Ainda não salvo. Clique em Salvar PDF para gravar o arquivo.");
                     else lblStatus.Text = L.T("Editado e salvo:") + " " + Path.GetFileName(doc.Caminho);
                 }
             }

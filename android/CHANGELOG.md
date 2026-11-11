@@ -16,6 +16,7 @@ Acompanha as funções da **3.3** do PC.
 
 ### Alterado
 - **Várias páginas só com PDF:** a faixa de páginas aparece apenas quando o tipo de arquivo é PDF. Com JPEG ou PNG, cada digitalização é uma imagem só.
+- Com **duas páginas ou mais**, o tipo de arquivo fica **travado em PDF**; com uma página só, destrava.
 - Novo esquema de `versionCode` (`100000 + maior×10000 + menor×100 + correção`), para nunca ficar abaixo de um APK de teste anterior.
 
 ### Observações

@@ -57,7 +57,6 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 |---|---|---|
 | 🪟 **Windows 10/11** | [`Digitalizar-3.3.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.0/Digitalizar-3.3.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
 | 🐧 **Linux** | [`Digitalizar-3.3.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.0/Digitalizar-3.3.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
-
 | 📱 **Android 10+** | [`Digitalizar-1.3.0-android.apk`](https://github.com/giosepeluiz/project-scanner/releases/download/android-v1.3.0/Digitalizar-1.3.0-android.apk) | Baixe no celular e toque para instalar. Veja a [versão Android](#-versão-para-android) |
 
 > [!WARNING]
@@ -86,7 +85,7 @@ O **Digitalizar para Android** (versão **1.3.0**, que acompanha as funções da
 | | 🖥️ PC | 📱 Android |
 |---|---|---|
 | Origem | Scanner USB ou de rede (WIA / SANE) | Scanner de rede (eSCL / AirScan) **ou câmera** |
-| Salvar | Automático | **Só ao tocar em "Salvar"** |
+| Salvar | Automático (o PDF espera o **Salvar PDF**) | **Só ao tocar em "Salvar"** |
 | PDF | **Várias páginas** (só com PDF), com adicionar e excluir | **Várias páginas** (só com PDF), com adicionar e excluir |
 | Cor | **Pode trocar depois** de digitalizar | **Pode trocar depois** de digitalizar |
 | Atualização | **Dentro do programa**, pelo GitHub | **Dentro do app**, pelo GitHub |
@@ -104,7 +103,7 @@ A comparação completa está no **[README do Android](android/README.md)** e o 
 2. Escolha o **Scanner**. Se a impressora estava desligada, ligue-a e clique em **Detectar**.
 3. Escolha o **Tamanho do documento**. O programa digitaliza só aquela área, o que é mais rápido e gera arquivos menores.
 4. Escolha o **Tipo de arquivo**, o **Modo de cor** e a **Resolução**. Uma dica: 300 DPI é ótimo para documentos e 600 para desenhos com detalhes finos.
-5. Clique em **Digitalizar**. A imagem aparece à direita e é **salva automaticamente** com um nome tipo `Scan_2026-11-07_124300.jpg`. Depois de digitalizar, ainda dá para **trocar o Modo de cor**: o arquivo é regravado. Com o tipo **PDF**, aparece a faixa de páginas: use o **+** para digitalizar outra página (todas vão para o mesmo PDF) e **Novo PDF** para começar outro.
+5. Clique em **Digitalizar**. A imagem aparece à direita e é **salva automaticamente** com um nome tipo `Scan_2026-11-07_124300.jpg`. Depois de digitalizar, ainda dá para **trocar o Modo de cor**: o arquivo é regravado. Com o tipo **PDF**, aparece a faixa de páginas: use o **+** para digitalizar outra página (todas vão para o mesmo PDF), **Salvar PDF** para gravar o arquivo (o PDF não salva sozinho) e **Novo PDF** para começar outro. Com duas páginas ou mais o tipo fica travado em PDF.
 
 Para trocar a pasta de destino, clique no card **Salvar arquivo em**; o link **Padrão** volta para a pasta original.
 

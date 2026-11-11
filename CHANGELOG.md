@@ -10,10 +10,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ## [3.3.0] – 2026-11-11 · "Várias páginas e sempre atualizado" 📄
 
 ### Adicionado
-- **Trocar o modo de cor depois de digitalizar** (Colorido, Tons de cinza e Preto e branco), como no Android. O scanner passa a digitalizar sempre em cores; o programa guarda o original colorido e converte na hora. O arquivo salvo é regravado com o novo modo.
+- **Trocar o modo de cor depois de digitalizar** (Colorido, Tons de cinza e Preto e branco), como no Android. O scanner passa a digitalizar sempre em cores; o programa guarda o original colorido e converte na hora. Em JPEG e PNG o arquivo salvo é regravado com o novo modo; no PDF a mudança espera o **Salvar PDF**.
 - **PDF de várias páginas**, só quando o tipo de arquivo é **PDF**:
   - Aparece uma **faixa de páginas** com miniaturas, o botão **+** para digitalizar a próxima página e o **×** para excluir uma página (com confirmação; a última página não pode ser excluída).
   - O botão **Novo PDF** começa um documento novo.
+  - **O PDF não é salvo sozinho:** as páginas se juntam e o arquivo só é gravado no botão **Salvar PDF**. Ao começar outro PDF, digitalizar em JPEG/PNG ou fechar o programa com um PDF não salvo, o programa pergunta se quer salvar. (JPEG e PNG continuam salvando sozinhos.)
+  - Com **duas páginas ou mais**, o tipo de arquivo fica **travado em PDF**; ao sobrar uma página só, destrava.
   - Com JPEG ou PNG, a faixa some e cada digitalização continua gerando um arquivo.
   - O editor rápido abre a página escolhida e devolve o resultado para ela.
 - **Atualização dentro do programa**, direto das releases do GitHub:

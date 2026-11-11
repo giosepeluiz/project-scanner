@@ -361,6 +361,14 @@ public class Principal extends Activity {
     // ------------------------------------------------------------- páginas do PDF
     void atualizarPaginas() {
         final Documento d = Sessao.doc;
+        // com duas páginas ou mais o tipo fica travado em PDF; com uma só, destrava
+        boolean travar = d != null && d.paginas.size() >= 2;
+        if (travar && !"PDF".equals(tipo())) {
+            int i = indice(Config.TIPOS, "PDF");
+            selTipo.definir(i);
+            Prefs.definir("tipo", "PDF");
+        }
+        selTipo.bloquear(travar);
         boolean pdf = "PDF".equals(tipo());
         // páginas só existem com o tipo PDF escolhido; JPEG e PNG guardam a imagem que está na tela
         if (d == null || Sessao.imagem == null || !pdf) { faixa.setVisibility(View.GONE); return; }
