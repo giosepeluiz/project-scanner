@@ -6,7 +6,7 @@
 
 ### Digitalize, ajuste e compartilhe em segundos, sem instalar nada.
 
-[![Versão](https://img.shields.io/badge/versão-3.3.0-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
+[![Versão](https://img.shields.io/badge/versão-3.3.1-4cc2ff?style=for-the-badge)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Linux](https://img.shields.io/badge/Linux-SANE-fcc624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/giosepeluiz/project-scanner/releases/latest)
 [![Android](https://img.shields.io/badge/Android-1.3.0-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.3.0)
@@ -55,20 +55,14 @@ Pegue a versão mais recente em **[Releases](https://github.com/giosepeluiz/proj
 
 | Sistema | Arquivo | Como usar |
 |---|---|---|
-| 🪟 **Windows 10/11** | [`Digitalizar-3.3.0-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.0/Digitalizar-3.3.0-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
-| 🐧 **Linux** | [`Digitalizar-3.3.0-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.0/Digitalizar-3.3.0-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
+| 🪟 **Windows 10/11** | [`Digitalizar-3.3.1-windows.zip`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.1/Digitalizar-3.3.1-windows.zip) | Descompacte e abra o `Digitalizar.exe`. Pronto! |
+| 🐧 **Linux** | [`Digitalizar-3.3.1-linux.tar.gz`](https://github.com/giosepeluiz/project-scanner/releases/download/v3.3.1/Digitalizar-3.3.1-linux.tar.gz) | Descompacte e rode `./digitalizar.sh` (veja abaixo) |
 | 📱 **Android 10+** | [`Digitalizar-1.3.0-android.apk`](https://github.com/giosepeluiz/project-scanner/releases/download/android-v1.3.0/Digitalizar-1.3.0-android.apk) | Baixe no celular e toque para instalar. Veja a [versão Android](#-versão-para-android) |
 
 > [!WARNING]
 > **Na primeira vez, o Windows pode mostrar um aviso azul ("O Windows protegeu o computador").** Isso acontece com todo programa sem assinatura digital paga. Clique em **Mais informações → Executar assim mesmo**. O código está todo aqui, aberto, para quem quiser conferir.
 >
-> 💡 **Dica:** clique com o botão direito no `.zip` baixado → **Propriedades** → marque **Desbloquear** → OK, e só depois extraia. Assim o aviso nem aparece. O hash SHA-256 de cada arquivo está nos anexos da release, para você conferir. A [política de assinatura de código](CODE_SIGNING.md) explica como estamos tratando isso.
-
-### 🔏 Assinatura de código
-
-Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).
-
-O Digitalizar usa a assinatura de código gratuita da **SignPath Foundation** para projetos de código aberto. As versões assinadas serão publicadas aqui, em Releases, e compiladas automaticamente pelo GitHub Actions. Veja a [política de assinatura](CODE_SIGNING.md).
+> 💡 **Dica:** clique com o botão direito no `.zip` baixado → **Propriedades** → marque **Desbloquear** → OK, e só depois extraia. Assim o aviso nem aparece. O hash SHA-256 de cada arquivo está nos anexos da release, para você conferir. Por enquanto o programa não tem assinatura digital; veja a [nota sobre assinatura de código](CODE_SIGNING.md).
 
 ### 🐧 No Linux
 
@@ -78,7 +72,7 @@ Você precisa do **Mono** (para rodar o programa) e do **SANE** (para falar com 
 sudo apt install mono-complete sane-utils    # Debian / Ubuntu / Mint
 sudo apt install hplip                       # se o scanner for HP (ex.: DeskJet 2700)
 
-tar -xzf Digitalizar-3.3.0-linux.tar.gz
+tar -xzf Digitalizar-3.3.1-linux.tar.gz
 cd Digitalizar
 ./digitalizar.sh                             # abre o programa
 ./instalar-atalho.sh                         # (opcional) cria o atalho no menu
@@ -185,7 +179,7 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 ## 🕰️ Histórico de versões
 
 ### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua" + "Sempre atualizado"
-**Releases: [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) (mais recente) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
+**Releases: [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) (mais recente) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
 
@@ -284,7 +278,7 @@ mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
 | `src/Opcoes.cs` · `src/Sobre.cs` | Janelas de Opções e Sobre |
 | `android/` | Versão Android (Java), com o próprio README, CHANGELOG e `build.sh` |
 
-Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`, `v3.2.0`, `v3.3.0`), então dá para ver o código de qualquer uma delas.
+Cada versão está marcada com uma *tag* (`v1.0.0`, `v2.1.0`, `v3.1.0`, `v3.2.0`, `v3.3.0`, `v3.3.1`), então dá para ver o código de qualquer uma delas.
 
 ## 🤝 Código aberto: contribua!
 

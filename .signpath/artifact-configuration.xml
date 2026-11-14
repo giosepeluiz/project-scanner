@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Configuração do artefato para a SignPath: o zip enviado pelo GitHub Actions tem só o Digitalizar.exe -->
-<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
-  <zip-file>
-    <pe-file path="Digitalizar.exe">
-      <authenticode-sign />
-    </pe-file>
-  </zip-file>
-</artifact-configuration>

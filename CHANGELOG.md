@@ -17,7 +17,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Adicionado
 - Um erro inesperado agora grava o `erro.log` ao lado do programa e mostra uma mensagem, em vez de o programa fechar sozinho.
-- Fluxo do GitHub Actions que compila, assina (SignPath Foundation, quando configurada) e publica as versões do PC. Veja [CODE_SIGNING.md](CODE_SIGNING.md).
+- Fluxo do GitHub Actions que compila e publica as versões do PC. Os executáveis seguem sem assinatura digital (veja [CODE_SIGNING.md](CODE_SIGNING.md)).
 
 ---
 
