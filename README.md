@@ -209,6 +209,11 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 - **O programa lembra de tudo:** idioma, tema, cor, scanner, tamanho, tipo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela (inclusive maximizada) e o valor do Recorte rápido.
 - Nas Opções, o tema "do sistema" aparece com o nome certo no Linux.
 
+**O que a 3.3.1 corrigiu:** 🖋️
+- **Windows que abria e fechava** (compilação feita com o Mono): corrigido, e erros inesperados agora geram um `erro.log`.
+- **Preto e branco adaptativo:** traços finos e claros (lápis, caneta fraca) não somem mais.
+- **Edição rápida em qualquer modo:** o editor ajusta o original em cores e converte no fim, então brilho, níveis e curvas valem também no preto e branco e chegam ao arquivo, à cópia e ao PDF.
+
 **O que a 3.3 acrescentou:** 📄
 - **Trocar o modo de cor depois de digitalizar:** Colorido, Tons de cinza ou Preto e branco. O scanner digitaliza sempre em cores e o programa converte na hora. Em JPEG e PNG o arquivo é regravado.
 - **PDF de várias páginas** (só com o tipo PDF): faixa de miniaturas, **+** para digitalizar a próxima página, **×** para excluir e **Novo PDF** para recomeçar. O PDF só é gravado em **Salvar PDF** (o programa avisa se houver algo sem salvar) e, com duas páginas ou mais, o tipo de arquivo fica travado em PDF.

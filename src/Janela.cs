@@ -15,8 +15,8 @@ using System.Windows.Forms;
 [assembly: AssemblyDescription("Digitalização com edição rápida")]
 [assembly: AssemblyCompany("Giosepe Luiz dos Santos")]
 [assembly: AssemblyCopyright("© 2026 Giosepe Luiz dos Santos")]
-[assembly: AssemblyVersion("3.3.0.0")]
-[assembly: AssemblyFileVersion("3.3.0.0")]
+[assembly: AssemblyVersion("3.3.1.0")]
+[assembly: AssemblyFileVersion("3.3.1.0")]
 
 namespace Digitalizar
 {
@@ -527,9 +527,11 @@ namespace Digitalizar
         // ------------------------------------------------ ações
         void Editar()
         {
-            if (doc == null || doc.ImagemAtual == null) return;
+            if (doc == null || doc.ImagemAtual == null || doc.PaginaAtual.Original == null) return;
             bool pdf = doc.EhPdf;
-            using (var ed = new Editor(doc.ImagemAtual, doc.Caminho, pdf))
+            string nomeArq = doc.Caminho ?? Imagens.NovoCaminho(pasta, doc.Tipo);
+            // o editor ajusta o original em cor e converte para o modo no fim: assim os ajustes valem também no preto e branco
+            using (var ed = new Editor(doc.PaginaAtual.Original, doc.Modo, nomeArq, pdf))
             {
                 if (ed.ShowDialog(this) == DialogResult.OK && ed.ResultadoImagem != null)
                 {

@@ -353,7 +353,8 @@ namespace Digitalizar
     // ============================================================ Imagens
     static class Imagens
     {
-        public const int LimiarPB = 140;
+        public const int PretoSeguro = 110;   // abaixo disso é sempre preto
+        public const int FatorPB = 90;        // % da média local: abaixo disso é traço
 
         public static Bitmap Para24bpp(Image src)
         {
@@ -394,7 +395,66 @@ namespace Digitalizar
         static int Luma(int r, int g, int b) { return (r * 299 + g * 587 + b * 114) / 1000; }
 
         public static void ConverterCinza(Bitmap b) { Processar(b, (r, g, bl) => Luma(r, g, bl)); }
-        public static void ConverterPB(Bitmap b) { Processar(b, (r, g, bl) => Luma(r, g, bl) > LimiarPB ? 255 : 0); }
+        /// Preto e branco adaptativo: compara cada pixel com a média da vizinhança, então traços finos e claros
+        /// (lápis, caneta fraca) continuam pretos, mesmo que o papel seja cinza ou tenha sombra
+        public static void ConverterPB(Bitmap b)
+        {
+            int w = b.Width, h = b.Height;
+            var r = new Rectangle(0, 0, w, h);
+            BitmapData d = b.LockBits(r, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            try
+            {
+                int stride = d.Stride;
+                var lum = new byte[w * h];
+                byte[] linha = new byte[stride];
+                for (int y = 0; y < h; y++)
+                {
+                    Marshal.Copy(d.Scan0 + y * stride, linha, 0, stride);
+                    for (int x = 0; x < w; x++)
+                    {
+                        int i = x * 3;
+                        lum[y * w + x] = (byte)((linha[i + 2] * 299 + linha[i + 1] * 587 + linha[i] * 114) / 1000);
+                    }
+                }
+                // imagem integral (soma por blocos); estouro do uint é inofensivo porque só se usam diferenças
+                int W1 = w + 1;
+                var integ = new uint[W1 * (h + 1)];
+                for (int y = 0; y < h; y++)
+                {
+                    uint soma = 0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        soma += lum[y * w + x];
+                        integ[(y + 1) * W1 + x + 1] = integ[y * W1 + x + 1] + soma;
+                    }
+                }
+                int raio = Math.Max(12, Math.Min(w, h) / 40);
+                for (int y = 0; y < h; y++)
+                {
+                    int y0 = Math.Max(0, y - raio), y1 = Math.Min(h, y + raio + 1);
+                    for (int x = 0; x < w; x++)
+                    {
+                        int x0 = Math.Max(0, x - raio), x1 = Math.Min(w, x + raio + 1);
+                        uint s = integ[y1 * W1 + x1] - integ[y0 * W1 + x1] - integ[y1 * W1 + x0] + integ[y0 * W1 + x0];
+                        int media = (int)(s / (uint)((x1 - x0) * (y1 - y0)));
+                        int l = lum[y * w + x];
+                        // preto se for escuro de verdade, ou claramente mais escuro que o papel em volta
+                        byte v = (l < PretoSeguro || l < media * FatorPB / 100) ? (byte)0 : (byte)255;
+                        int i = x * 3;
+                        linha[i] = linha[i + 1] = linha[i + 2] = v;
+                    }
+                    Marshal.Copy(linha, 0, d.Scan0 + y * stride, stride);
+                }
+            }
+            finally { b.UnlockBits(d); }
+        }
+
+        /// Converte no próprio bitmap para o modo pedido (Cor não muda nada)
+        public static void ConverterModo(Bitmap b, string modo)
+        {
+            if (modo == "Cinza") ConverterCinza(b);
+            else if (modo == "Preto e branco") ConverterPB(b);
+        }
 
         static ImageCodecInfo Codec(string mime)
         {

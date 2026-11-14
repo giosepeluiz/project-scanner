@@ -7,6 +7,20 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ---
 
+## [3.3.1] – 2026-11-14 · Preto e branco mais fiel e edição que vale em qualquer modo 🖋️
+
+### Corrigido
+- **Windows: o programa fechava ao abrir e a verificação de atualização dava erro.** O executável publicado na 3.3.0 foi compilado com o Mono e chamava métodos que o .NET Framework do Windows não tem (`Split`/`TrimEnd` com um caractere). Agora o código usa só chamadas compatíveis e o pacote é compilado com o compilador do Windows.
+- **Preto e branco perdia traços finos e claros** (lápis, caneta fraca): o limiar fixo transformava cinza-claro em branco. O preto e branco agora é **adaptativo**: cada ponto é comparado com o papel em volta, então linhas e textos finos continuam pretos, mesmo com papel cinza ou sombra.
+- **A edição rápida não surtia efeito no preto e branco**, porque recebia a imagem já convertida. Agora o editor ajusta o **original em cores** e converte para o modo do documento no fim. O resultado vai para o arquivo salvo, para a cópia (Ctrl+V) e para o PDF.
+- Depois de editar, o original colorido é mantido: dá para trocar o modo de cor de novo sem perder qualidade.
+
+### Adicionado
+- Um erro inesperado agora grava o `erro.log` ao lado do programa e mostra uma mensagem, em vez de o programa fechar sozinho.
+- Fluxo do GitHub Actions que compila, assina (SignPath Foundation, quando configurada) e publica as versões do PC. Veja [CODE_SIGNING.md](CODE_SIGNING.md).
+
+---
+
 ## [3.3.0] – 2026-11-11 · "Várias páginas e sempre atualizado" 📄
 
 ### Adicionado

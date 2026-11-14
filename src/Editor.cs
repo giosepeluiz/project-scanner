@@ -197,6 +197,7 @@ namespace Digitalizar
         int anguloCache = int.MinValue;
         bool alterado, salvando;
         readonly bool soImagem;
+        readonly string modo;            // modo do documento: o editor ajusta o original em cor e converte no fim
 
         public Bitmap ResultadoImagem;
         public string ResultadoCaminho;
@@ -216,9 +217,10 @@ namespace Digitalizar
         static int S(int v) { return Tema.S(v); }
 
         /// soImagem: só devolve a imagem editada (usado nas páginas do PDF, que o programa grava depois)
-        public Editor(Bitmap img, string arquivo, bool soImagem = false)
+        public Editor(Bitmap img, string modo, string arquivo, bool soImagem = false)
         {
             this.soImagem = soImagem;
+            this.modo = modo;
             original = img;
             this.arquivo = arquivo;
             dpi = (int)Math.Round(img.HorizontalResolution);
@@ -504,6 +506,7 @@ namespace Digitalizar
             }
             var b = Imagens.Copia24(proxyRot);
             Imagens.AplicarTom(b, a.Lut(), a.Limiar, a.ValorLimiar);
+            Imagens.ConverterModo(b, modo);
             tela.DefinirImagem(b);
         }
 
@@ -541,8 +544,12 @@ namespace Digitalizar
             Cursor = Cursors.WaitCursor;
             try
             {
-                Bitmap r = RenderFinal();
-                if (!soImagem) Imagens.GuardarEm(r, caminho, dpi);
+                Bitmap r = RenderFinal();              // em cor: vira o novo original da página
+                if (!soImagem)
+                {
+                    using (var vista = Imagens.Renderizar(r, modo))   // o arquivo sai no modo do documento
+                        Imagens.GuardarEm(vista, caminho, dpi);
+                }
                 ResultadoImagem = r;
                 ResultadoCaminho = soImagem ? null : caminho;
                 salvando = true;

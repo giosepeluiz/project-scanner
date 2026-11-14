@@ -137,7 +137,7 @@ namespace Digitalizar
             }
         }
 
-        /// A edição rápida devolveu uma nova imagem para a página atual: ela vira o novo original
+        /// A edição rápida devolveu a página ajustada (em cor): ela vira o novo original e o modo é aplicado de novo
         public void SubstituirAtual(Bitmap editada)
         {
             var p = PaginaAtual;
@@ -146,10 +146,10 @@ namespace Digitalizar
             if (dpi < 30) dpi = p.Dpi;
             if (p.Original != null) p.Original.Dispose();
             if (p.Atual != null) p.Atual.Dispose();
-            p.Original = Imagens.Copia24(editada);
-            p.Original.SetResolution(dpi, dpi);
+            editada.SetResolution(dpi, dpi);
+            p.Original = editada;
             p.Dpi = dpi;
-            p.Atual = editada;                  // a imagem editada já está no modo atual
+            p.Atual = Imagens.Renderizar(p.Original, Modo);
             p.ModoRender = Modo;
             p.Pdf = null;
             p.RefazerMini(Modo);
