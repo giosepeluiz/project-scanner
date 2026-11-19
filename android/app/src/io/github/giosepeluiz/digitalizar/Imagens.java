@@ -206,11 +206,12 @@ public final class Imagens {
     }
 
     // ------------------------------------------------------------- codificação
-    public static String extensao(String tipo) { return "PDF".equals(tipo) ? "pdf" : "PNG".equals(tipo) ? "png" : "jpg"; }
-    public static String mime(String tipo) { return "PDF".equals(tipo) ? "application/pdf" : "PNG".equals(tipo) ? "image/png" : "image/jpeg"; }
+    public static String extensao(String tipo) { return "PDF".equals(tipo) ? "pdf" : "PNG".equals(tipo) ? "png" : "JPEG XL".equals(tipo) ? "jxl" : "jpg"; }
+    public static String mime(String tipo) { return "PDF".equals(tipo) ? "application/pdf" : "PNG".equals(tipo) ? "image/png" : "JPEG XL".equals(tipo) ? "image/jxl" : "image/jpeg"; }
 
     public static byte[] codificar(Bitmap b, String tipo, String modo, int dpi) throws IOException {
         if ("PDF".equals(tipo)) return pdf(java.util.Collections.singletonList(paginaPdf(b, modo, dpi)));
+        if ("JPEG XL".equals(tipo)) return Jxl.codificar(b);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         if ("PNG".equals(tipo)) { b.compress(Bitmap.CompressFormat.PNG, 100, os); return os.toByteArray(); }
         b.compress(Bitmap.CompressFormat.JPEG, 92, os);

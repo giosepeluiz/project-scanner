@@ -28,8 +28,8 @@ namespace Digitalizar
         public static readonly string PastaPadrao = Path.Combine(
             Windows ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : Environment.GetFolderPath(Environment.SpecialFolder.Personal),
             "Scanned Documents");
-        public static readonly string[] Tipos = { "JPEG", "PNG", "PDF" };
-        public const string TipoPadrao = "JPEG";
+        public static readonly string[] Tipos = { "JPEG XL", "JPEG", "PNG", "PDF" };
+        public const string TipoPadrao = "JPEG XL";
         public static readonly string[] Modos = { "Cor", "Cinza", "Preto e branco" };
         public const string ModoPadrao = "Preto e branco";
         public static readonly string[] Resolucoes = { "75", "150", "300", "600", "1200" };
@@ -476,7 +476,7 @@ namespace Digitalizar
         public static string NovoCaminho(string pasta, string tipo)
         {
             Directory.CreateDirectory(pasta);
-            string ext = tipo == "JPEG" ? ".jpg" : tipo == "PNG" ? ".png" : ".pdf";
+            string ext = tipo == "JPEG" ? ".jpg" : tipo == "JPEG XL" ? ".jxl" : tipo == "PNG" ? ".png" : ".pdf";
             string nomeBase = "Scan_" + DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
             string caminho = Path.Combine(pasta, nomeBase + ext);
             int n = 1;
@@ -510,10 +510,40 @@ namespace Digitalizar
             b.SetResolution(dpi, dpi);
             string tmp = caminho + ".tmp";
             if (ext == ".png") b.Save(tmp, ImageFormat.Png);
+            else if (ext == ".jxl") File.WriteAllBytes(tmp, Jxl(b));
             else if (ext == ".pdf") Pdf.Escrever(tmp, b, EhBinaria(b) ? "Preto e branco" : "Cor", dpi);
             else File.WriteAllBytes(tmp, Jpeg(b, 92));
             if (File.Exists(caminho)) File.Delete(caminho);
             File.Move(tmp, caminho);
+        }
+
+        /// JPEG XL sem perdas: 1 canal quando a imagem é cinza (cinza e preto e branco), 3 canais em cores
+        public static byte[] Jxl(Bitmap b)
+        {
+            int w = b.Width, h = b.Height;
+            var rgb = new byte[w * h * 3];
+            BitmapData d = b.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            bool cinza = true;
+            try
+            {
+                byte[] linha = new byte[d.Stride];
+                for (int y = 0; y < h; y++)
+                {
+                    Marshal.Copy(d.Scan0 + y * d.Stride, linha, 0, d.Stride);
+                    int o = y * w * 3;
+                    for (int x = 0; x < w; x++)
+                    {
+                        byte bl = linha[3 * x], g = linha[3 * x + 1], r = linha[3 * x + 2];
+                        if (r != g || g != bl) cinza = false;
+                        rgb[o + 3 * x] = r; rgb[o + 3 * x + 1] = g; rgb[o + 3 * x + 2] = bl;
+                    }
+                }
+            }
+            finally { b.UnlockBits(d); }
+            if (!cinza) return JpegXl.Codificar(w, h, 3, rgb);
+            var g1 = new byte[w * h];
+            for (int i = 0; i < g1.Length; i++) g1[i] = rgb[3 * i];
+            return JpegXl.Codificar(w, h, 1, g1);
         }
 
         public static bool EhBinaria(Bitmap b)

@@ -3,6 +3,18 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 A numeração do Android acompanha a do PC com duas "casas" de diferença: **1.3** do Android corresponde às funções da **3.3** do PC. O histórico do PC está no [CHANGELOG da raiz](../CHANGELOG.md).
 
+## [1.4.0] – 2026-11-19 · JPEG XL e giro de 1 em 1° 🖼️
+
+Acompanha as funções da **3.4** do PC.
+
+### Adicionado
+- **Salvar em JPEG XL (`.jxl`) sem perdas**, a máxima qualidade: a imagem é idêntica à digitalizada. É o **tipo padrão** na primeira vez que o app é aberto (quem já escolheu outro tipo continua com ele). O codificador é próprio (sem biblioteca externa) e gera o mesmo arquivo da versão do PC. Páginas em cinza e preto e branco saem em 1 canal e ficam bem menores. Para abrir `.jxl` no Android, é preciso um visualizador compatível; se o seu não abrir, escolha JPEG ou PNG.
+
+### Alterado
+- **Girar de 1 em 1°:** o encaixe automático a cada 45° foi removido e entraram os botões **−1°** e **+1°** para o ajuste fino. **↺ 90° / ↻ 90°** continuam.
+
+---
+
 ## [1.3.0] – 2026-11-11 · "Sempre atualizado" 🔄
 
 Acompanha as funções da **3.3** do PC.

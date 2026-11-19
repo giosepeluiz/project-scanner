@@ -97,8 +97,15 @@ public class Editor extends Activity {
         LinearLayout cg = secao(ferr, L.T("Girar"));
         dAng = slider(cg, L.T("Ângulo"), -180, 180, 0);
         dAng.sufixo = "°";
-        dAng.encaixes = new int[] { -180, -135, -90, -45, 0, 45, 90, 135, 180 };
-        nota(cg, L.T("Encaixa automaticamente a cada 45°. Toque duplo repõe."));
+        nota(cg, L.T("Ajuste fino de 1° em 1° com −1° e +1°. Toque duplo repõe."));
+        LinearLayout rf = Ui.linha(this);
+        TextView menos1 = Ui.botao(this, null, "−1°", false), mais1 = Ui.botao(this, null, "+1°", false);
+        menos1.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { girar90(-1); } });
+        mais1.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { girar90(1); } });
+        rf.addView(menos1, new LinearLayout.LayoutParams(0, WC, 1));
+        LinearLayout.LayoutParams lm = new LinearLayout.LayoutParams(0, WC, 1); lm.leftMargin = S(8);
+        rf.addView(mais1, lm);
+        cg.addView(rf, Ui.lpM(MP, WC, 0, 6, 0, 0));
         LinearLayout rg = Ui.linha(this);
         TextView esq = Ui.botao(this, Ui.Ic.GIRAR_ESQ, "90°", false), dir = Ui.botao(this, Ui.Ic.GIRAR_DIR, "90°", false);
         esq.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { girar90(-90); } });

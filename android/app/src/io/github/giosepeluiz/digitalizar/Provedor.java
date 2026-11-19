@@ -32,7 +32,7 @@ public class Provedor extends ContentProvider {
 
     @Override public String getType(Uri u) {
         String n = u.getLastPathSegment() == null ? "" : u.getLastPathSegment().toLowerCase();
-        return n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".png") ? "image/png"
+        return n.endsWith(".pdf") ? "application/pdf" : n.endsWith(".png") ? "image/png" : n.endsWith(".jxl") ? "image/jxl"
                 : n.endsWith(".apk") ? "application/vnd.android.package-archive" : "image/jpeg";
     }
 

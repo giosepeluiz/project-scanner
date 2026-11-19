@@ -7,6 +7,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ---
 
+## [3.4.0] – 2026-11-19 · JPEG XL e giro de 1 em 1° 🖼️
+
+### Adicionado
+- **Salvar em JPEG XL (`.jxl`) com a máxima qualidade.** O arquivo sai **sem perdas**: a imagem gravada é idêntica, pixel por pixel, à que foi digitalizada. É o novo **tipo padrão** na primeira vez que o programa é aberto (quem já tinha um tipo escolhido continua com o dele). O codificador é próprio, escrito só com o .NET, então não precisa de DLL nem de instalação. Também está em **Salvar como…** da edição rápida.
+  - Os arquivos `.jxl` são bem menores que PNG, mas maiores que um JPEG comum, porque nada é descartado. Para abrir, o Windows precisa da extensão *JPEG XL Image Extension* (Microsoft Store) ou de um visualizador como o IrfanView; no Linux, a maioria dos visualizadores recentes já abre.
+  - Páginas em tons de cinza e em preto e branco saem em 1 canal, o que reduz bastante o tamanho.
+
+### Alterado
+- **Girar agora vai de 1 em 1°.** O encaixe automático a cada 45° foi removido (ele fazia o controle parecer pular de 5 em 5°). Os botões **−1°** e **+1°** foram incluídos para o ajuste fino, e **↺ 90° / ↻ 90°** continuam.
+
+---
+
 ## [3.3.1] – 2026-11-14 · Preto e branco mais fiel e edição que vale em qualquer modo 🖋️
 
 ### Corrigido

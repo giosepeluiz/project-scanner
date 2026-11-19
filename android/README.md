@@ -6,7 +6,7 @@
 
 ### O mesmo Digitalizar do Windows e do Linux, agora no celular, e com câmera inteligente.
 
-![Versão](https://img.shields.io/badge/versão-1.3.0-4cc2ff?style=for-the-badge)
+![Versão](https://img.shields.io/badge/versão-1.4.0-4cc2ff?style=for-the-badge)
 ![Android](https://img.shields.io/badge/Android-10%2B-3ddc84?style=for-the-badge&logo=android&logoColor=white)
 ![Licença MIT](https://img.shields.io/badge/licença-MIT-6ccb5f?style=for-the-badge)
 
@@ -22,7 +22,7 @@ O Android segue a numeração do Digitalizar de PC com uma diferença de duas "c
 
 | | 🖥️ PC (Windows / Linux) | 📱 Android |
 |---|---|---|
-| **Versão** | 3.3.0 | **1.3.0** |
+| **Versão** | 3.4.0 | **1.4.0** |
 | **Linguagem** | C# (Windows Forms) | Java puro, sem AndroidX e sem Gradle |
 | **Origem da digitalização** | Scanner USB ou de rede (WIA no Windows, SANE no Linux) | **Scanner de rede** (eSCL / AirScan / Mopria) **ou câmera do celular** |
 | **Câmera inteligente** | Não tem | **Sim**: detecta a folha, endireita, tira sombras e vira um scan |
@@ -73,7 +73,7 @@ Precisa do **Android 10 ou mais novo**.
 ## 📖 Como usar
 
 1. Escolha a **Origem**: *Scanner da rede* ou *Câmera*.
-2. Escolha o **Tamanho do documento**, o **Tipo de arquivo** (JPEG, PNG ou PDF), o **Modo de cor** e a **Resolução**.
+2. Escolha o **Tamanho do documento**, o **Tipo de arquivo** (JPEG XL, JPEG, PNG ou PDF), o **Modo de cor** e a **Resolução**.
 3. Toque em **Digitalizar**. A imagem aparece na tela, mas **ainda não é salva**: você decide.
 4. Quer outra cor? Mude o **Modo de cor** depois de digitalizar: o que foi digitalizado em *Cor* pode virar *Cinza* ou *Preto e branco* (e voltar). O tipo de arquivo também pode mudar até salvar.
 5. Toque em **Salvar**. O arquivo vai para **Documentos › Scanned Documents** (ou a pasta que você escolher no card *Salvar arquivo em*), com um nome tipo `Scan_2026-11-07_124300.jpg`. Se mudar algo depois, é só tocar em **Salvar** de novo.
@@ -105,7 +105,7 @@ O app é escrito em **Java** usando só a API do Android (sem AndroidX, sem Grad
 
 ```bash
 tools/preparar.sh      # baixa aapt2, dx, android.jar e apksigner para /opt/asdk (uma vez só)
-./build.sh             # gera build/Digitalizar-1.3.0-android.apk
+./build.sh             # gera build/Digitalizar-1.4.0-android.apk
 teste/testar.sh        # testa a deteção do documento no computador, com fotos sintéticas
 ```
 
@@ -119,11 +119,18 @@ O `build.sh` assina com `keystore/digitalizar.jks` (senha na variável `KS_PASS`
 | `Revisao.java` | Ajuste dos cantos com lupa, filtro e "transformar em scan" |
 | `Visao.java` | A inteligência: deteção, refino dos cantos, perspectiva e realce |
 | `Editor.java` | Edição rápida |
-| `Imagens.java` | Processamento, JPEG/PNG/PDF e pastas de destino |
+| `Jxl.java` | Codificador JPEG XL sem perdas |
+| `Imagens.java` | Processamento, JPEG XL/JPEG/PNG/PDF e pastas de destino |
 | `Ui.java` · `Tema.java` · `L.java` | Controles, temas/cores e idiomas |
 | `Opcoes.java` · `Sobre.java` · `Provedor.java` | Opções, Sobre e a partilha de arquivos com outros apps |
 
 ## 🕰️ Histórico de versões
+
+### 🖼️ Versão 1.4: "JPEG XL"
+**Release: [android-v1.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.4.0)** · acompanha as funções da 3.4 do PC
+
+- **JPEG XL sem perdas** (`.jxl`): a máxima qualidade, igual à digitalizada, como tipo padrão na primeira vez. Cinza e preto e branco saem em 1 canal e ficam bem menores. Para abrir no Android é preciso um visualizador compatível; se o seu não abrir, escolha JPEG ou PNG.
+- **Girar de 1 em 1°:** sem encaixe a cada 45°, e com os botões **−1°** e **+1°** para o ajuste fino.
 
 ### 🔄 Versão 1.3: "Sempre atualizado"
 **Release: [android-v1.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.3.0)** · acompanha as funções da 3.3 do PC

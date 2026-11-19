@@ -190,7 +190,7 @@ public final class Documento {
     /** Ficheiro temporário para Copiar / Compartilhar / Abrir (o documento todo em PDF, ou a página atual). */
     public File exportar(Context ctx, String tipo, boolean soImagem) throws IOException {
         boolean pdf = "PDF".equals(tipo) && !soImagem;
-        String t = pdf ? "PDF" : "PNG".equals(tipo) ? "PNG" : "JPEG";
+        String t = pdf ? "PDF" : "PNG".equals(tipo) ? "PNG" : "JPEG XL".equals(tipo) ? "JPEG XL" : "JPEG";
         byte[] dados = pdf ? pdf() : imagem(atual, t);
         String nome;
         if (salvo() && t.equals(tipoSalvo) && !alterado) nome = nomes.get(pdf ? 0 : Math.min(atual, nomes.size() - 1));

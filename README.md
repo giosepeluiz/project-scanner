@@ -18,7 +18,7 @@
 
 </div>
 
-> 🇬🇧 **English summary:** *Digitalizar* is a free, portable scanning app for Windows (WIA) and Linux (SANE). Scan to JPEG, PNG or PDF, copy the image right after scanning, and crop, rotate or fix it in a built-in quick editor. Available in 15 languages (it starts in your system language) and remembers all your settings. No installation needed. There is also an **Android version** (network scanners + camera scan), see the [`android/`](android/) folder. Open source under the MIT license.
+> 🇬🇧 **English summary:** *Digitalizar* is a free, portable scanning app for Windows (WIA) and Linux (SANE). Scan to JPEG XL (lossless), JPEG, PNG or PDF, copy the image right after scanning, and crop, rotate or fix it in a built-in quick editor. Available in 15 languages (it starts in your system language) and remembers all your settings. No installation needed. There is also an **Android version** (network scanners + camera scan), see the [`android/`](android/) folder. Open source under the MIT license.
 
 ---
 
@@ -37,7 +37,7 @@ Com o tempo ele ganhou um editor rápido para corrigir a imagem, visual moderno 
 | 🖨️ **Encontra o scanner sozinho** | Detecta impressoras multifuncionais e scanners ligados por USB ou Wi-Fi |
 | 📄 **Tamanhos de papel padrão** | A4, A5, A6, B5, B6, Carta, Executivo, fotos 10 × 15 e 13 × 18, cartão de visita ou área máxima do vidro |
 | 🎨 **Cor, cinza ou preto e branco** | De 75 a 1200 DPI |
-| 💾 **JPEG, PNG ou PDF** | Salvo automaticamente na pasta que você escolher |
+| 💾 **JPEG XL, JPEG, PNG ou PDF** | Salvo automaticamente na pasta que você escolher |
 | 📋 **Copiar logo depois de digitalizar** | É só colar com Ctrl+V onde quiser |
 | ✂️ **Edição rápida** | Recortar, girar, brilho, contraste, níveis, curvas e limiar, com pré-visualização ao vivo |
 | ↗️ **Compartilhar** | Abre a janela de compartilhamento do Windows |
@@ -136,7 +136,7 @@ Para trocar a pasta de destino, clique no card **Salvar arquivo em**; o link **P
 - **Níveis:** ponto preto e branco de entrada, tons médios (gama) e ponto preto e branco de saída.
 - **Curvas:** clique na curva para criar pontos e arraste; o botão direito remove um ponto. O histograma da imagem aparece ao fundo para ajudar.
 - **Limiar:** transforma a imagem em preto e branco puro, perfeito para desenhos feitos à mão.
-- **Salvar** substitui o arquivo; **Salvar como…** grava com outro nome ou noutro formato (JPEG, PNG ou PDF).
+- **Salvar** substitui o arquivo; **Salvar como…** grava com outro nome ou noutro formato (JPEG XL, JPEG, PNG ou PDF).
 
 > 💡 A pré-visualização é rápida, mas ao salvar as edições são aplicadas na **resolução original**, sem perder qualidade. Dê duplo clique num slider para voltar ao valor padrão.
 
@@ -154,7 +154,7 @@ Para trocar a pasta de destino, clique no card **Salvar arquivo em**; o link **P
   - **Tema:** claro, escuro ou do Windows. Muda na hora.
   - **Cor de destaque:** 10 cores ou a cor do Windows. Muda na hora.
 
-> 💾 **Tudo o que você escolhe fica guardado:** idioma, tema, cor, scanner, tamanho do documento, tipo de arquivo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela e o valor do Recorte rápido. Os padrões (A4, JPEG, Preto e branco, 300 DPI) só valem na primeira vez que o programa é aberto.
+> 💾 **Tudo o que você escolhe fica guardado:** idioma, tema, cor, scanner, tamanho do documento, tipo de arquivo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela e o valor do Recorte rápido. Os padrões (A4, JPEG XL, Preto e branco, 300 DPI) só valem na primeira vez que o programa é aberto.
 
 <p>
 <img src="docs/screenshots/08-opcoes.png" width="340" alt="Opções">
@@ -179,7 +179,7 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 ## 🕰️ Histórico de versões
 
 ### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua" + "Sempre atualizado"
-**Releases: [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) (mais recente) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
+**Releases: [v3.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.4.0) (mais recente) · [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
 
@@ -202,6 +202,11 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 - **15 idiomas.** O programa abre no idioma do sistema (ou em inglês, se o idioma do sistema não estiver na lista), e dá para trocar nas Opções. Os principais ficam no topo: Português (Brasil), Português (Portugal), English (US), English (UK) e Español. Depois vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文 (simplificado).
 - **O programa lembra de tudo:** idioma, tema, cor, scanner, tamanho, tipo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela (inclusive maximizada) e o valor do Recorte rápido.
 - Nas Opções, o tema "do sistema" aparece com o nome certo no Linux.
+
+**O que a 3.4 acrescentou:** 🖼️
+- **JPEG XL sem perdas**, a máxima qualidade, como tipo padrão na primeira vez que o programa é aberto. O arquivo `.jxl` guarda a imagem idêntica à digitalizada, é bem menor que PNG e maior que um JPEG comum. Para abrir no Windows é preciso a extensão *JPEG XL Image Extension* (Microsoft Store) ou um visualizador como o IrfanView.
+- **Girar de 1 em 1°:** sem o encaixe a cada 45°, e com os botões **−1°** e **+1°** para o ajuste fino.
+- 📱 No Android, a **1.4.0** traz as mesmas duas novidades.
 
 **O que a 3.3.1 corrigiu:** 🖋️
 - **Windows que abria e fechava** (compilação feita com o Mono): corrigido, e erros inesperados agora geram um `erro.log`.
@@ -238,7 +243,7 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 
 A primeira versão: um executável de apenas **34 KB** que funciona sem instalar nada.
 - Reconhece o scanner pelo **WIA**, o mesmo sistema do app "Digitalizar" do Windows.
-- Fonte: área do vidro. Tipos: JPEG, PNG e PDF. Modos: cor, cinza e preto e branco. Resoluções de 75 a 1200 DPI.
+- Fonte: área do vidro. Tipos: JPEG XL, JPEG, PNG e PDF. Modos: cor, cinza e preto e branco. Resoluções de 75 a 1200 DPI.
 - Salva na pasta *Documentos › Scanned Documents*, com opção de escolher outra.
 - Depois de digitalizar: **Copiar imagem**, **Abrir** e **Abrir pasta**.
 
@@ -270,6 +275,7 @@ mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
 | `src/Documento.cs` | Documento digitalizado: páginas, modo de cor e salvamento |
 | `src/Atualizador.cs` | Verificação e instalação de novas versões pelo GitHub |
 | `src/Editor.cs` | Edição rápida (recorte, rotação, tons) |
+| `src/JpegXl.cs` | Codificador JPEG XL sem perdas (sem DLL) |
 | `src/Comum.cs` | Scanner (WIA no Windows, SANE no Linux), processamento de imagem e gerador de PDF |
 | `src/Controles.cs` | Controles próprios: seletores, botões, sliders, switch, editor de curvas |
 | `src/Moldura.cs` | Barra de título integrada |

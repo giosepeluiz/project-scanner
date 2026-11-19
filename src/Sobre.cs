@@ -91,7 +91,7 @@ namespace Digitalizar
                 { L.T("Plataforma"), Config.Windows ? "Windows 10 / 11 · .NET Framework " + Environment.Version : "Linux · Mono " + Environment.Version },
                 { L.T("Sistema"), Environment.OSVersion.VersionString + (Environment.Is64BitOperatingSystem ? " · 64 bits" : " · 32 bits") },
                 { L.T("Digitalização"), Config.Windows ? "WIA (Windows Image Acquisition)" : "SANE (scanimage)" },
-                { L.T("Formatos"), L.T("JPEG, PNG e PDF") },
+                { L.T("Formatos"), L.T("JPEG XL, JPEG, PNG e PDF") },
                 { L.T("Configurações"), Path.GetDirectoryName(Prefs.Arquivo) },
             };
             var tec = Cartao(corpo, y, S(12) + info.GetLength(0) * S(28) + S(6));

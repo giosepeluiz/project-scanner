@@ -290,13 +290,17 @@ namespace Digitalizar
             // Girar
             Secao(L.T("Girar"));
             dlGirar = Desl(L.T("Ângulo"), -180, 180, 0, v => Sinal(v) + "°");
-            dlGirar.Encaixe = v => { int r = (int)Math.Round(v / 45.0) * 45; return Math.Abs(v - r) <= 4 ? r : v; };
+            var b1a = Btn("−1°", false, S(18), S(169));
+            b1a.Click += (s, e) => dlGirar.Valor = Normalizar(dlGirar.Valor - 1);
+            var b1h = Btn("+1°", false, S(195), S(169));
+            b1h.Click += (s, e) => dlGirar.Valor = Normalizar(dlGirar.Valor + 1);
+            y += b1a.Height + S(4);
             var b90a = Btn("↺  90°", false, S(18), S(169));
             b90a.Click += (s, e) => dlGirar.Valor = Normalizar(dlGirar.Valor - 90);
             var b90h = Btn("↻  90°", false, S(195), S(169));
             b90h.Click += (s, e) => dlGirar.Valor = Normalizar(dlGirar.Valor + 90);
             y += b90a.Height + S(4);
-            Dica(L.T("Encaixa automaticamente a cada 45°. Duplo clique repõe."));
+            Dica(L.T("Ajuste fino de 1° em 1° com −1° e +1°. Duplo clique repõe."));
 
             // Recortar
             Secao(L.T("Recortar"));
@@ -568,9 +572,9 @@ namespace Digitalizar
             using (var d = new SaveFileDialog())
             {
                 d.Title = L.T("Salvar como");
-                d.Filter = "JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|PDF (*.pdf)|*.pdf";
+                d.Filter = "JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|PDF (*.pdf)|*.pdf|JPEG XL (*.jxl)|*.jxl";
                 string ext = Path.GetExtension(arquivo).ToLowerInvariant();
-                d.FilterIndex = ext == ".png" ? 2 : ext == ".pdf" ? 3 : 1;
+                d.FilterIndex = ext == ".png" ? 2 : ext == ".pdf" ? 3 : ext == ".jxl" ? 4 : 1;
                 d.InitialDirectory = Path.GetDirectoryName(arquivo);
                 d.FileName = Path.GetFileNameWithoutExtension(arquivo) + "_editado";
                 d.AddExtension = true;
@@ -578,8 +582,8 @@ namespace Digitalizar
                 if (d.ShowDialog(this) != DialogResult.OK) return;
                 string c = d.FileName;
                 string e = Path.GetExtension(c).ToLowerInvariant();
-                if (e != ".jpg" && e != ".jpeg" && e != ".png" && e != ".pdf")
-                    c += d.FilterIndex == 2 ? ".png" : d.FilterIndex == 3 ? ".pdf" : ".jpg";
+                if (e != ".jpg" && e != ".jpeg" && e != ".png" && e != ".pdf" && e != ".jxl")
+                    c += d.FilterIndex == 2 ? ".png" : d.FilterIndex == 3 ? ".pdf" : d.FilterIndex == 4 ? ".jxl" : ".jpg";
                 Salvar(c);
             }
         }

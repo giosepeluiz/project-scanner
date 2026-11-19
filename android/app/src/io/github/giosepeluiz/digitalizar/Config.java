@@ -6,11 +6,11 @@ import java.util.Locale;
 public final class Config {
     private Config() { }
 
-    public static final String VERSAO = "1.3.0";
+    public static final String VERSAO = "1.4.0";
     public static final String AUTOR = "Giosepe Luiz dos Santos";
 
-    public static final String[] TIPOS = { "JPEG", "PNG", "PDF" };
-    public static final String TIPO_PADRAO = "JPEG";
+    public static final String[] TIPOS = { "JPEG XL", "JPEG", "PNG", "PDF" };
+    public static final String TIPO_PADRAO = "JPEG XL";
     public static final String[] MODOS = { "Cor", "Cinza", "Preto e branco" };
     public static final String MODO_PADRAO = "Preto e branco";
     public static final String[] RESOLUCOES = { "75", "150", "300", "600", "1200" };

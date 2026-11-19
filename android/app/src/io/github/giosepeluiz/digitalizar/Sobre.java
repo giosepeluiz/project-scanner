@@ -76,7 +76,7 @@ public class Sobre extends Activity {
                 { L.T("Plataforma"), "Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")" },
                 { L.T("Sistema"), Build.MANUFACTURER + " " + Build.MODEL },
                 { L.T("Digitalização"), L.T("Rede Wi-Fi (eSCL / AirScan) e câmera com detecção automática do documento") },
-                { L.T("Formatos"), L.T("JPEG, PNG e PDF") },
+                { L.T("Formatos"), L.T("JPEG XL, JPEG, PNG e PDF") },
                 { L.T("Ícones"), "Font Awesome Free 6.7.2 (CC BY 4.0 · SIL OFL 1.1)" } };
         for (String[] i : info) {
             LinearLayout li = Ui.linha(this);
