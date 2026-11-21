@@ -80,9 +80,25 @@ final class Otimizar {
                 log.append("recorte ").append(nw).append("x").append(nh).append("; ");
             }
         } else {
-            double d = anguloTexto(g, sw, sh);
+            // sem moldura de scanner reconhecível: ainda assim tira faixas pretas coladas nas bordas
+            int[] bd = aparaBordas(g, sw, sh);
+            if (bd != null) {
+                int x0 = bd[0] * f, y0 = bd[1] * f;
+                int x1 = bd[2] > 0 ? (sw - bd[2]) * f : w, y1 = bd[3] > 0 ? (sh - bd[3]) * f : h;
+                int nw = x1 - x0, nh = y1 - y0;
+                if (nw >= 16 && nh >= 16) {
+                    cur = amostrar(rgb, w, h, (x0 + x1 - 1) / 2.0, (y0 + y1 - 1) / 2.0, 0, nw, nh);
+                    cw = nw; ch = nh; mudou = true;
+                    log.append("bordas; ");
+                }
+            }
+            int fa = Math.max(1, (Math.max(cw, ch) + LADO - 1) / LADO);
+            int swa = sw, sha = sh;
+            byte[] ga = g;
+            if (mudou) { swa = cw / fa; sha = ch / fa; ga = reduzir(cur, cw, fa, swa, sha); }
+            double d = anguloTexto(ga, swa, sha);
             if (Math.abs(d) >= 0.2) {
-                cur = amostrar(rgb, w, h, (w - 1) / 2.0, (h - 1) / 2.0, d * Math.PI / 180, w, h);
+                cur = amostrar(cur, cw, ch, (cw - 1) / 2.0, (ch - 1) / 2.0, d * Math.PI / 180, cw, ch);
                 mudou = true;
                 log.append("texto; ");
             }
@@ -125,6 +141,35 @@ final class Otimizar {
         return g;
     }
 
+    /** Faixas pretas coladas nas bordas. Devolve {esq, topo, dir, base} em px reduzidos, ou null. */
+    static int[] aparaBordas(byte[] g, int sw, int sh) {
+        int n = sw * sh;
+        int T = Math.min(150, Math.max(40, otsu(g, n)));
+        int[] r = { lado(g, sw, sh, T, 0), lado(g, sw, sh, T, 1), lado(g, sw, sh, T, 2), lado(g, sw, sh, T, 3) };
+        if (r[0] + r[1] + r[2] + r[3] == 0) return null;
+        if (r[0] + r[2] > sw * 0.4 || r[1] + r[3] > sh * 0.4) return null;
+        return r;
+    }
+
+    /** lado: 0 esquerda, 1 topo, 2 direita, 3 base. Avança enquanto a linha for majoritariamente escura (tolera 3 claras) e soma 2 px. */
+    static int lado(byte[] g, int sw, int sh, int T, int lado) {
+        boolean vert = lado == 0 || lado == 2;
+        int comp = vert ? sh : sw, prof = (int) ((vert ? sw : sh) * 0.15);
+        int ultimo = -1, falhas = 0;
+        for (int k = 0; k < prof; k++) {
+            int dark = 0;
+            for (int i = 0; i < comp; i++) {
+                int x, y;
+                if (lado == 0) { x = k; y = i; } else if (lado == 2) { x = sw - 1 - k; y = i; }
+                else if (lado == 1) { x = i; y = k; } else { x = i; y = sh - 1 - k; }
+                if ((g[y * sw + x] & 255) < T) dark++;
+            }
+            if (dark >= comp * 0.4) { ultimo = k; falhas = 0; }
+            else if (++falhas > 3) break;
+        }
+        return ultimo < 0 ? 0 : ultimo + 1 + 2;
+    }
+
     static int otsu(byte[] g, int n) {
         long[] hist = new long[256];
         for (int i = 0; i < n; i++) hist[g[i] & 255]++;
@@ -153,7 +198,7 @@ final class Otimizar {
         int anel = 0, total = 0;
         for (int x = 0; x < sw; x++) { total += 2; if ((g[x] & 255) < T) anel++; if ((g[(sh - 1) * sw + x] & 255) < T) anel++; }
         for (int y = 1; y < sh - 1; y++) { total += 2; if ((g[y * sw] & 255) < T) anel++; if ((g[y * sw + sw - 1] & 255) < T) anel++; }
-        if (anel < total * 0.10) return false;
+        if (anel < total * 0.03) return false;
 
         boolean[] bg = new boolean[n];
         int[] pilha = new int[n];
@@ -178,7 +223,7 @@ final class Otimizar {
         }
         int nbg = 0;
         for (int i = 0; i < n; i++) if (bg[i]) nbg++;
-        if (nbg < n * 0.005 || nbg > n * 0.85) return false;
+        if (nbg < n * 0.0005 || nbg > n * 0.85) return false;
 
         byte[] comp = new byte[n];
         int melhorArea = 0, melhorSemente = -1;
@@ -336,34 +381,126 @@ final class Otimizar {
     }
 
     // ------------------------------------------------------------ 3) orientação
-    /** Rotação (graus, horário) a aplicar: 0, 90, 180 ou 270. 0 quando não há certeza. */
+    /** Rotação (graus, horário): 0, 90, 180 ou 270. Decide o eixo do texto (retrato/paisagem); o giro de 180° exige certeza. */
     static int orientacao(byte[] g, int sw, int sh) {
         int n = sw * sh;
         int T = Math.min(170, Math.max(60, otsu(g, n)));
+        boolean[] tinta = new boolean[n];
+        int total = 0;
+        for (int i = 0; i < n; i++) if ((g[i] & 255) < T) { tinta[i] = true; total++; }
+        if (total < 300 || total > n * 0.5) return 0;
+        removerLinhas(tinta, sw, sh);
+
         double[] R = new double[sh], C = new double[sw];
-        int tinta = 0;
+        int tinta2 = 0;
         for (int y = 0; y < sh; y++)
             for (int x = 0; x < sw; x++)
-                if ((g[y * sw + x] & 255) < T) { R[y]++; C[x]++; tinta++; }
-        if (tinta < 300 || tinta > n * 0.5) return 0;
+                if (tinta[y * sw + x]) { R[y]++; C[x]++; tinta2++; }
+        if (tinta2 < 300) return 0;
         for (int y = 0; y < sh; y++) R[y] /= sw;
         for (int x = 0; x < sw; x++) C[x] /= sh;
-        double er = energia(R, sh), ec = energia(C, sw);
-        if (er <= 0 || ec <= 0) return 0;
-        double razao = er / ec;
-        if (razao > 1.3) {
+
+        int eixo = eixoTexto(tinta, sw, sh);
+        if (eixo == 0) {
+            double er = energia(R, sh), ec = energia(C, sw);
+            if (er <= 0 || ec <= 0) return 0;
+            double razao = er / ec;
+            if (razao > 1.3) eixo = 1; else if (razao < 0.77) eixo = -1;
+        }
+        if (eixo == 0) return 0;
+
+        if (eixo > 0) {
             double[] v = voto(R, sh);
             if (v[1] >= 3 && v[0] > LIMITE_ASSIM) return 180;
             return 0;
         }
-        if (razao < 0.77) {
-            double[] v = voto(C, sw);
-            if (v[1] < 3) return 0;
-            if (v[0] > LIMITE_ASSIM) return 270;
-            if (v[0] < -LIMITE_ASSIM) return 90;
-            return 0;
+        double[] v = voto(C, sw);
+        if (v[1] >= 1 && v[0] > 0) return 270;
+        return 90;
+    }
+
+    /** Apaga da máscara as retas muito longas (bordas de tabela, moldura): não são texto. */
+    static void removerLinhas(boolean[] t, int sw, int sh) {
+        int limH = Math.max(20, (int) (sw * 0.12)), limV = Math.max(20, (int) (sh * 0.12));
+        for (int y = 0; y < sh; y++) {
+            int x = 0;
+            while (x < sw) {
+                if (!t[y * sw + x]) { x++; continue; }
+                int a = x;
+                while (x < sw && t[y * sw + x]) x++;
+                if (x - a > limH) for (int k = a; k < x; k++) t[y * sw + k] = false;
+            }
         }
+        for (int x = 0; x < sw; x++) {
+            int y = 0;
+            while (y < sh) {
+                if (!t[y * sw + x]) { y++; continue; }
+                int a = y;
+                while (y < sh && t[y * sw + x]) y++;
+                if (y - a > limV) for (int k = a; k < y; k++) t[k * sw + x] = false;
+            }
+        }
+    }
+
+    /** 1 = texto na horizontal, -1 = na vertical, 0 = sem certeza (manchas alongadas depois de borrar a tinta). */
+    static int eixoTexto(boolean[] tinta, int sw, int sh) {
+        double sh_ = 0, sv = 0;
+        int[] gaps = { 5, 12 };
+        for (int k = 0; k < gaps.length; k++) {
+            sh_ += alongadas(tinta, sw, sh, gaps[k], true);
+            sv += alongadas(tinta, sw, sh, gaps[k], false);
+        }
+        if (sh_ + sv < 150) return 0;
+        if (sh_ > sv * 1.25) return 1;
+        if (sv > sh_ * 1.25) return -1;
         return 0;
+    }
+
+    static double alongadas(boolean[] tinta, int sw, int sh, int gap, boolean horiz) {
+        int n = sw * sh;
+        boolean[] m = new boolean[n];
+        System.arraycopy(tinta, 0, m, 0, n);
+        if (horiz) {
+            for (int y = 0; y < sh; y++) {
+                int ult = -1;
+                for (int x = 0; x < sw; x++)
+                    if (tinta[y * sw + x]) {
+                        if (ult >= 0 && x - ult > 1 && x - ult - 1 <= gap) for (int k = ult + 1; k < x; k++) m[y * sw + k] = true;
+                        ult = x;
+                    }
+            }
+        } else {
+            for (int x = 0; x < sw; x++) {
+                int ult = -1;
+                for (int y = 0; y < sh; y++)
+                    if (tinta[y * sw + x]) {
+                        if (ult >= 0 && y - ult > 1 && y - ult - 1 <= gap) for (int k = ult + 1; k < y; k++) m[k * sw + x] = true;
+                        ult = y;
+                    }
+            }
+        }
+        boolean[] visto = new boolean[n];
+        int[] pilha = new int[n];
+        double score = 0;
+        for (int s = 0; s < n; s++) {
+            if (!m[s] || visto[s]) continue;
+            int topo = 0; pilha[topo++] = s; visto[s] = true;
+            int x0 = sw, x1 = -1, y0 = sh, y1 = -1, tint = 0;
+            while (topo > 0) {
+                int p = pilha[--topo];
+                int x = p % sw, y = p / sw;
+                if (tinta[p]) tint++;
+                if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+                if (x > 0 && m[p - 1] && !visto[p - 1]) { visto[p - 1] = true; pilha[topo++] = p - 1; }
+                if (x < sw - 1 && m[p + 1] && !visto[p + 1]) { visto[p + 1] = true; pilha[topo++] = p + 1; }
+                if (y > 0 && m[p - sw] && !visto[p - sw]) { visto[p - sw] = true; pilha[topo++] = p - sw; }
+                if (y < sh - 1 && m[p + sw] && !visto[p + sw]) { visto[p + sw] = true; pilha[topo++] = p + sw; }
+            }
+            int bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+            int comp = horiz ? bw : bh, larg = horiz ? bh : bw;
+            if (comp >= 24 && comp >= 3 * larg && larg <= 80) score += tint;
+        }
+        return score;
     }
 
     static double energia(double[] p, int n) {

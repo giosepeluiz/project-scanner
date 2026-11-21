@@ -6,7 +6,7 @@ import java.util.Locale;
 public final class Config {
     private Config() { }
 
-    public static final String VERSAO = "1.5.0";
+    public static final String VERSAO = "1.5.1";
     public static final String AUTOR = "Giosepe Luiz dos Santos";
 
     public static final String[] TIPOS = { "JPEG XL", "JPEG", "PNG", "PDF" };

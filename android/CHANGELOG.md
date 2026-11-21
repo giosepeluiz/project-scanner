@@ -3,6 +3,14 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 A numeração do Android acompanha a do PC com duas "casas" de diferença: **1.3** do Android corresponde às funções da **3.3** do PC. O histórico do PC está no [CHANGELOG da raiz](../CHANGELOG.md).
 
+## [1.5.1] – 2026-11-21 · Otimizar: faixas pretas finas e retrato/paisagem
+
+### Corrigido
+- **Otimizar não girava páginas só com croqui e medidas.** Agora a decisão de retrato/paisagem procura as linhas de texto depois de descartar réguas, tabelas e molduras, e **sempre põe o texto na horizontal**; só o giro de 180° exige certeza.
+- **Faixas pretas finas coladas na borda não eram removidas.** Agora são reconhecidas e aparadas.
+
+---
+
 ## [1.5.0] – 2026-11-21 · Otimizar a página automaticamente ✨
 
 Acompanha as funções da **3.5** do PC.

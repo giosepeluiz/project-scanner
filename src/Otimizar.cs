@@ -83,10 +83,28 @@ namespace Digitalizar
             }
             else
             {
-                double d = AnguloTexto(g, sw, sh);
+                // sem moldura de scanner reconhecível: ainda assim tira faixas pretas coladas nas bordas (tampa aberta, sombra)
+                int bl, bt, br, bb;
+                if (AparaBordas(g, sw, sh, out bl, out bt, out br, out bb))
+                {
+                    int x0 = bl * f, y0 = bt * f;
+                    int x1 = br > 0 ? (sw - br) * f : w, y1 = bb > 0 ? (sh - bb) * f : h;
+                    int nw = x1 - x0, nh = y1 - y0;
+                    if (nw >= 16 && nh >= 16)
+                    {
+                        cur = Amostrar(bgr, w, h, (x0 + x1 - 1) / 2.0, (y0 + y1 - 1) / 2.0, 0, nw, nh);
+                        cw = nw; ch = nh; mudou = true;
+                        log += "bordas " + bl + "," + bt + "," + br + "," + bb + "; ";
+                    }
+                }
+                int fa = Math.Max(1, (Math.Max(cw, ch) + LADO - 1) / LADO);
+                int swa = cw / fa, sha = ch / fa;
+                byte[] ga = mudou ? Reduzir(cur, cw, ch, fa, swa, sha) : g;
+                if (!mudou) { swa = sw; sha = sh; }
+                double d = AnguloTexto(ga, swa, sha);
                 if (Math.Abs(d) >= 0.2)
                 {
-                    cur = Amostrar(bgr, w, h, (w - 1) / 2.0, (h - 1) / 2.0, d * Math.PI / 180, w, h);
+                    cur = Amostrar(cur, cw, ch, (cw - 1) / 2.0, (ch - 1) / 2.0, d * Math.PI / 180, cw, ch);
                     mudou = true;
                     log += "texto " + d.ToString("0.00") + "; ";
                 }
@@ -134,6 +152,40 @@ namespace Digitalizar
             return g;
         }
 
+        /// Faixas pretas coladas nas bordas (linhas/colunas quase todas escuras). Devolve quanto cortar de cada lado, em px reduzidos.
+        static bool AparaBordas(byte[] g, int sw, int sh, out int l, out int t, out int r, out int b)
+        {
+            int n = sw * sh;
+            int T = Math.Min(150, Math.Max(40, Otsu(g, n)));
+            l = Lado(g, sw, sh, T, 0); t = Lado(g, sw, sh, T, 1); r = Lado(g, sw, sh, T, 2); b = Lado(g, sw, sh, T, 3);
+            if (l + t + r + b == 0) return false;
+            if (l + r > sw * 0.4 || t + b > sh * 0.4) { l = t = r = b = 0; return false; }
+            return true;
+        }
+
+        /// lado: 0 esquerda, 1 topo, 2 direita, 3 base. Avança para dentro enquanto a linha for majoritariamente escura
+        /// (tolera 3 linhas claras seguidas) e soma 2 px de folga.
+        static int Lado(byte[] g, int sw, int sh, int T, int lado)
+        {
+            bool vert = lado == 0 || lado == 2;           // esquerda/direita: percorre colunas
+            int comp = vert ? sh : sw, prof = (int)((vert ? sw : sh) * 0.15);
+            int ultimo = -1, falhas = 0;
+            for (int k = 0; k < prof; k++)
+            {
+                int dark = 0;
+                for (int i = 0; i < comp; i++)
+                {
+                    int x, y;
+                    if (lado == 0) { x = k; y = i; } else if (lado == 2) { x = sw - 1 - k; y = i; }
+                    else if (lado == 1) { x = i; y = k; } else { x = i; y = sh - 1 - k; }
+                    if (g[y * sw + x] < T) dark++;
+                }
+                if (dark >= comp * 0.4) { ultimo = k; falhas = 0; }
+                else if (++falhas > 3) break;
+            }
+            return ultimo < 0 ? 0 : ultimo + 1 + 2;
+        }
+
         static int Otsu(byte[] g, int n)
         {
             var hist = new long[256];
@@ -167,7 +219,7 @@ namespace Digitalizar
             int anel = 0, total = 0;
             for (int x = 0; x < sw; x++) { total += 2; if (g[x] < T) anel++; if (g[(sh - 1) * sw + x] < T) anel++; }
             for (int y = 1; y < sh - 1; y++) { total += 2; if (g[y * sw] < T) anel++; if (g[y * sw + sw - 1] < T) anel++; }
-            if (anel < total * 0.10) return false;
+            if (anel < total * 0.03) return false;
 
             // fundo = escuro ligado ao contorno
             var bg = new bool[n];
@@ -196,7 +248,7 @@ namespace Digitalizar
             }
             int nbg = 0;
             for (int i = 0; i < n; i++) if (bg[i]) nbg++;
-            if (nbg < n * 0.005 || nbg > n * 0.85) return false;
+            if (nbg < n * 0.0005 || nbg > n * 0.85) return false;
 
             // maior componente do que não é fundo (a página)
             var comp = new int[n];     // 0 = nada, 1 = página
@@ -382,39 +434,151 @@ namespace Digitalizar
         }
 
         // ------------------------------------------------------------ 3) orientação
-        /// Rotação (graus, horário) a aplicar: 0, 90, 180 ou 270. 0 quando não há certeza.
+        /// Rotação (graus, horário) a aplicar: 0, 90, 180 ou 270.
+        /// Primeiro decide o EIXO do texto (linhas na horizontal = retrato/paisagem certo; na vertical = precisa girar 90°);
+        /// só o giro de 180° exige certeza, porque a página só fica de cabeça para baixo se a assimetria for clara.
         static int Orientacao(byte[] g, int sw, int sh)
         {
             int n = sw * sh;
             int T = Math.Min(170, Math.Max(60, Otsu(g, n)));
+            var tinta = new bool[n];
+            int total = 0;
+            for (int i = 0; i < n; i++) if (g[i] < T) { tinta[i] = true; total++; }
+            if (total < 300 || total > n * 0.5) return 0;
+            RemoverLinhas(tinta, sw, sh);
+
             var R = new double[sh]; var C = new double[sw];
-            int tinta = 0;
+            int tinta2 = 0;
             for (int y = 0; y < sh; y++)
                 for (int x = 0; x < sw; x++)
-                    if (g[y * sw + x] < T) { R[y]++; C[x]++; tinta++; }
-            if (tinta < 300 || tinta > n * 0.5) return 0;
+                    if (tinta[y * sw + x]) { R[y]++; C[x]++; tinta2++; }
+            if (tinta2 < 300) return 0;
             for (int y = 0; y < sh; y++) R[y] /= sw;
             for (int x = 0; x < sw; x++) C[x] /= sh;
-            double er = Energia(R, sh), ec = Energia(C, sw);
-            if (er <= 0 || ec <= 0) return 0;
-            double razao = er / ec;
-            if (razao > 1.3)
+
+            int eixo = EixoTexto(tinta, sw, sh);          // 1 = linhas na horizontal, -1 = na vertical, 0 = sem certeza
+            if (eixo == 0)
             {
-                double v; int linhas;
+                double er = Energia(R, sh), ec = Energia(C, sw);
+                if (er <= 0 || ec <= 0) return 0;
+                double razao = er / ec;
+                if (razao > 1.3) eixo = 1; else if (razao < 0.77) eixo = -1;
+            }
+            if (eixo == 0) return 0;
+
+            double v; int linhas;
+            if (eixo > 0)
+            {
                 Voto(R, sh, out v, out linhas);
                 if (linhas >= 3 && v > LIMITE_ASSIM) return 180;
                 return 0;
             }
-            if (razao < 0.77)
+            Voto(C, sw, out v, out linhas);
+            if (linhas >= 1 && v > 0) return 270;        // topo das letras para a direita: gira 90° anti-horário
+            return 90;                                    // topo para a esquerda (ou sem pista): gira 90° horário
+        }
+
+        /// Apaga da máscara de tinta as retas muito longas (bordas de tabela, moldura, réguas): não são texto
+        static void RemoverLinhas(bool[] t, int sw, int sh)
+        {
+            int limH = Math.Max(20, (int)(sw * 0.12)), limV = Math.Max(20, (int)(sh * 0.12));
+            for (int y = 0; y < sh; y++)
             {
-                double v; int linhas;
-                Voto(C, sw, out v, out linhas);
-                if (linhas < 3) return 0;
-                if (v > LIMITE_ASSIM) return 270;      // topo das letras para a direita (cauda em +x): gira 90° anti-horário
-                if (v < -LIMITE_ASSIM) return 90;      // topo para a esquerda: gira 90° horário
-                return 0;
+                int x = 0;
+                while (x < sw)
+                {
+                    if (!t[y * sw + x]) { x++; continue; }
+                    int a = x;
+                    while (x < sw && t[y * sw + x]) x++;
+                    if (x - a > limH) for (int k = a; k < x; k++) t[y * sw + k] = false;
+                }
             }
+            for (int x = 0; x < sw; x++)
+            {
+                int y = 0;
+                while (y < sh)
+                {
+                    if (!t[y * sw + x]) { y++; continue; }
+                    int a = y;
+                    while (y < sh && t[y * sw + x]) y++;
+                    if (y - a > limV) for (int k = a; k < y; k++) t[k * sw + x] = false;
+                }
+            }
+        }
+
+        /// 1 se o texto corre na horizontal, -1 se na vertical, 0 se não dá para dizer.
+        /// Borra a tinta ao longo de cada direção (junta letras e palavras): linhas de texto viram manchas compridas e finas
+        /// na direção do texto e blocos quadrados na outra. Vence a direção com mais tinta em manchas alongadas.
+        static int EixoTexto(bool[] tinta, int sw, int sh)
+        {
+            double sh_ = 0, sv = 0;
+            int[] gaps = { 5, 12 };
+            for (int k = 0; k < gaps.Length; k++)
+            {
+                sh_ += Alongadas(tinta, sw, sh, gaps[k], true);
+                sv += Alongadas(tinta, sw, sh, gaps[k], false);
+            }
+            if (sh_ + sv < 150) return 0;
+            if (sh_ > sv * 1.25) return 1;
+            if (sv > sh_ * 1.25) return -1;
             return 0;
+        }
+
+        static double Alongadas(bool[] tinta, int sw, int sh, int gap, bool horiz)
+        {
+            int n = sw * sh;
+            var m = new bool[n];
+            Array.Copy(tinta, m, n);
+            if (horiz)
+            {
+                for (int y = 0; y < sh; y++)
+                {
+                    int ult = -1;
+                    for (int x = 0; x < sw; x++)
+                        if (tinta[y * sw + x])
+                        {
+                            if (ult >= 0 && x - ult > 1 && x - ult - 1 <= gap) for (int k = ult + 1; k < x; k++) m[y * sw + k] = true;
+                            ult = x;
+                        }
+                }
+            }
+            else
+            {
+                for (int x = 0; x < sw; x++)
+                {
+                    int ult = -1;
+                    for (int y = 0; y < sh; y++)
+                        if (tinta[y * sw + x])
+                        {
+                            if (ult >= 0 && y - ult > 1 && y - ult - 1 <= gap) for (int k = ult + 1; k < y; k++) m[k * sw + x] = true;
+                            ult = y;
+                        }
+                }
+            }
+            var visto = new bool[n];
+            var pilha = new int[n];
+            double score = 0;
+            for (int s = 0; s < n; s++)
+            {
+                if (!m[s] || visto[s]) continue;
+                int topo = 0; pilha[topo++] = s; visto[s] = true;
+                int x0 = sw, x1 = -1, y0 = sh, y1 = -1, tint = 0;
+                while (topo > 0)
+                {
+                    int p = pilha[--topo];
+                    int x = p % sw, y = p / sw;
+                    if (tinta[p]) tint++;
+                    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+                    if (x > 0 && m[p - 1] && !visto[p - 1]) { visto[p - 1] = true; pilha[topo++] = p - 1; }
+                    if (x < sw - 1 && m[p + 1] && !visto[p + 1]) { visto[p + 1] = true; pilha[topo++] = p + 1; }
+                    if (y > 0 && m[p - sw] && !visto[p - sw]) { visto[p - sw] = true; pilha[topo++] = p - sw; }
+                    if (y < sh - 1 && m[p + sw] && !visto[p + sw]) { visto[p + sw] = true; pilha[topo++] = p + sw; }
+                }
+                int bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+                int comp = horiz ? bw : bh, larg = horiz ? bh : bw;
+                if (comp >= 24 && comp >= 3 * larg && larg <= 80) score += tint;
+            }
+            return score;
         }
 
         static double Energia(double[] p, int n)

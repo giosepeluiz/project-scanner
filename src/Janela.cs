@@ -15,8 +15,8 @@ using System.Windows.Forms;
 [assembly: AssemblyDescription("Digitalização com edição rápida")]
 [assembly: AssemblyCompany("Giosepe Luiz dos Santos")]
 [assembly: AssemblyCopyright("© 2026 Giosepe Luiz dos Santos")]
-[assembly: AssemblyVersion("3.5.0.0")]
-[assembly: AssemblyFileVersion("3.5.0.0")]
+[assembly: AssemblyVersion("3.5.1.0")]
+[assembly: AssemblyFileVersion("3.5.1.0")]
 
 namespace Digitalizar
 {
