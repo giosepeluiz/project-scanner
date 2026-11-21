@@ -13,6 +13,7 @@ final class Otimizar {
     private Otimizar() {}
 
     static final int LADO = 1000;                 // maior lado da imagem reduzida usada na análise
+    static final double LIMITE_FORTE = 0.10;      // assimetria para virar a rotação de 90° para o lado menos provável
     static final double LIMITE_ASSIM = 0.04;      // assimetria mínima para confiar na orientação
     static final long MAX_PIXELS = 30000000L;     // acima disso não otimiza (memória do celular)
 
@@ -414,8 +415,10 @@ final class Otimizar {
             if (v[1] >= 3 && v[0] > LIMITE_ASSIM) return 180;
             return 0;
         }
+        // Texto na vertical: 90° horário é o padrão (folha escrita na horizontal e colocada de lado no scanner,
+        // com o topo das letras para a esquerda). Só gira para o outro lado se a assimetria das letras for bem clara.
         double[] v = voto(C, sw);
-        if (v[1] >= 1 && v[0] > 0) return 270;
+        if (v[1] >= 3 && v[0] > LIMITE_FORTE) return 270;
         return 90;
     }
 

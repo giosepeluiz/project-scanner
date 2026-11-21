@@ -10,7 +10,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ## [3.5.1] – 2026-11-21 · Otimizar: faixas pretas finas e retrato/paisagem
 
 ### Corrigido
-- **Otimizar não girava páginas só com croqui e medidas.** A decisão de retrato/paisagem agora procura as linhas de texto (manchas alongadas) depois de descartar réguas, tabelas e molduras, e **sempre põe o texto na horizontal**; só o giro de 180° continua exigindo certeza.
+- **Otimizar não girava páginas só com croqui e medidas.** A decisão de retrato/paisagem agora procura as linhas de texto (manchas alongadas) depois de descartar réguas, tabelas e molduras, e **sempre põe o texto na horizontal**. Em croquis, números e letra de mão não há pista confiável de qual lado é o "em cima": o padrão é girar 90° no sentido horário (folha colocada de lado no scanner); o giro de 180° continua exigindo certeza.
 - **Faixas pretas finas coladas na borda** (tampa do scanner, sombra) **não eram removidas**: a moldura só era procurada quando era grande. Agora a moldura fina é reconhecida e, quando não há moldura, as faixas escuras das bordas são aparadas.
 
 ---

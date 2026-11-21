@@ -6,7 +6,7 @@ A numeração do Android acompanha a do PC com duas "casas" de diferença: **1.3
 ## [1.5.1] – 2026-11-21 · Otimizar: faixas pretas finas e retrato/paisagem
 
 ### Corrigido
-- **Otimizar não girava páginas só com croqui e medidas.** Agora a decisão de retrato/paisagem procura as linhas de texto depois de descartar réguas, tabelas e molduras, e **sempre põe o texto na horizontal**; só o giro de 180° exige certeza.
+- **Otimizar não girava páginas só com croqui e medidas.** Agora a decisão de retrato/paisagem procura as linhas de texto depois de descartar réguas, tabelas e molduras, e **sempre põe o texto na horizontal**. Em croquis, números e letra de mão não há pista confiável de qual lado é o "em cima": o padrão é girar 90° no sentido horário (folha colocada de lado no scanner); o giro de 180° exige certeza.
 - **Faixas pretas finas coladas na borda não eram removidas.** Agora são reconhecidas e aparadas.
 
 ---

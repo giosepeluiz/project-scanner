@@ -14,6 +14,7 @@ namespace Digitalizar
     {
         const int LADO = 1000;               // maior lado da imagem reduzida usada na análise
         const double LIMITE_ASSIM = 0.04;    // assimetria mínima para confiar na orientação
+        const double LIMITE_FORTE = 0.10;    // assimetria para virar a rotação de 90° para o lado menos provável
         const long MAX_PIXELS = 110000000L;  // acima disso (1200 DPI em A4) não otimiza, por causa da memória
 
         // ------------------------------------------------------------ bitmap
@@ -473,9 +474,11 @@ namespace Digitalizar
                 if (linhas >= 3 && v > LIMITE_ASSIM) return 180;
                 return 0;
             }
+            // Texto na vertical: 90° horário é o padrão (folha escrita na horizontal e colocada de lado no scanner,
+            // com o topo das letras para a esquerda). Só gira para o outro lado se a assimetria das letras for bem clara.
             Voto(C, sw, out v, out linhas);
-            if (linhas >= 1 && v > 0) return 270;        // topo das letras para a direita: gira 90° anti-horário
-            return 90;                                    // topo para a esquerda (ou sem pista): gira 90° horário
+            if (linhas >= 3 && v > LIMITE_FORTE) return 270;
+            return 90;
         }
 
         /// Apaga da máscara de tinta as retas muito longas (bordas de tabela, moldura, réguas): não são texto
@@ -524,7 +527,7 @@ namespace Digitalizar
             return 0;
         }
 
-        static double Alongadas(bool[] tinta, int sw, int sh, int gap, bool horiz)
+        static bool[] Borrar(bool[] tinta, int sw, int sh, int gap, bool horiz)
         {
             int n = sw * sh;
             var m = new bool[n];
@@ -555,6 +558,13 @@ namespace Digitalizar
                         }
                 }
             }
+            return m;
+        }
+
+        static double Alongadas(bool[] tinta, int sw, int sh, int gap, bool horiz)
+        {
+            int n = sw * sh;
+            var m = Borrar(tinta, sw, sh, gap, horiz);
             var visto = new bool[n];
             var pilha = new int[n];
             double score = 0;
