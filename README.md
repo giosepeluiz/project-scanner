@@ -179,7 +179,7 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 ## 🕰️ Histórico de versões
 
 ### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua" + "Sempre atualizado"
-**Releases: [v3.5.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.5.0) (mais recente) · [v3.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.4.0) · [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
+**Releases: [v3.5.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.5.1) (mais recente) · [v3.5.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.5.0) · [v3.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.4.0) · [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
 
@@ -203,8 +203,11 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 - **O programa lembra de tudo:** idioma, tema, cor, scanner, tamanho, tipo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela (inclusive maximizada) e o valor do Recorte rápido.
 - Nas Opções, o tema "do sistema" aparece com o nome certo no Linux.
 
+**O que a 3.5.1 corrigiu:** 🧭
+- **Otimizar** passa a pôr o texto na horizontal também em **croquis, números e letra de mão** (antes ignorava essas páginas) e a **remover faixas pretas finas** coladas na borda. Quando o texto está de lado e não há pista de qual lado é o "em cima", o padrão é girar 90° no sentido horário; o giro de 180° só acontece com certeza (use ↺/↻ 90° na edição rápida se precisar). No Android, a **1.5.1** traz o mesmo.
+
 **O que a 3.5 acrescentou:** ✨
-- **Otimizar** (ligado por padrão): ao digitalizar, o programa tira as bordas pretas, endireita a página, corrige a inclinação do texto e acerta a orientação (0/90/180/270°), mostrando uma borda em degradê girando enquanto trabalha. Roda no computador, sem internet e **sem IA**; quando não há certeza da orientação, não gira. Dá para desligar no interruptor acima de "Salvar arquivo em".
+- **Otimizar** (ligado por padrão): ao digitalizar, o programa tira as bordas pretas, endireita a página, corrige a inclinação do texto e acerta a orientação (0/90/180/270°), mostrando uma borda em degradê girando enquanto trabalha. Roda no computador, sem internet e **sem IA**; a página só é virada de cabeça para baixo (180°) quando há certeza. Dá para desligar no interruptor acima de "Salvar arquivo em".
 - 📱 No Android, a **1.5.0** traz o mesmo, logo abaixo do botão Digitalizar.
 
 **O que a 3.4 acrescentou:** 🖼️

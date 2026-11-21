@@ -1,7 +1,8 @@
 // Otimização automática da página, toda no aparelho (sem internet e sem IA):
 //   1) tira as bordas pretas da tampa do scanner e endireita a página (retângulo de menor área em volta dela);
 //   2) sem borda detectada, corrige a inclinação do texto (perfil de projeção);
-//   3) acerta a orientação (0, 90, 180 ou 270°) pelas linhas de texto; se não houver certeza, não gira.
+//   3) acerta a orientação pelas linhas de texto: põe o texto na horizontal (90° horário é o padrão quando o lado é incerto);
+//      o giro de 180° só acontece com certeza.
 // Mesma lógica do PC (src/Otimizar.cs): as duas versões tomam as mesmas decisões.
 package io.github.giosepeluiz.digitalizar;
 

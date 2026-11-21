@@ -1,0 +1,1 @@
+package android.graphics; public class Bitmap { public enum Config{ARGB_8888} public int getWidth(){return 0;} public int getHeight(){return 0;} public void getPixels(int[] a,int b,int c,int d,int e,int f,int g){} public void setPixels(int[] a,int b,int c,int d,int e,int f,int g){} public static Bitmap createBitmap(int w,int h,Config c){return null;} }

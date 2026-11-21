@@ -17,3 +17,6 @@ android/build/
 android/keystore/
 *.jks
 *.apk
+
+# Saída de tools/empacotar.sh
+entrega/
