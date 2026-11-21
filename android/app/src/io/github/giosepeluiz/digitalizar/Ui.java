@@ -396,4 +396,69 @@ public final class Ui {
             c.drawText(texto, r.right + S(12), cy + S(5), p);
         }
     }
+
+    /** Borda grossa em degradê girando em volta da imagem, enquanto a página é otimizada. */
+    public static final class BordaOtimizar extends View {
+        final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final RectF r = new RectF();
+        android.animation.ValueAnimator anim;
+        float fase;
+        int bw, bh;
+        android.graphics.SweepGradient grad;
+        int gx = -1, gy = -1;
+
+        public BordaOtimizar(Context c) {
+            super(c);
+            setVisibility(GONE);
+            setClickable(false);
+        }
+
+        public void iniciar(int w, int h) {
+            bw = w; bh = h;
+            grad = null;
+            setVisibility(VISIBLE);
+            if (anim == null) {
+                anim = android.animation.ValueAnimator.ofFloat(0f, 360f);
+                anim.setDuration(1800);
+                anim.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+                anim.setInterpolator(new android.view.animation.LinearInterpolator());
+                anim.addUpdateListener(new android.animation.ValueAnimator.AnimatorUpdateListener() {
+                    public void onAnimationUpdate(android.animation.ValueAnimator a) { fase = (Float) a.getAnimatedValue(); invalidate(); }
+                });
+            }
+            if (!anim.isRunning()) anim.start();
+        }
+
+        public void parar() {
+            if (anim != null) anim.cancel();
+            setVisibility(GONE);
+        }
+
+        @Override protected void onDetachedFromWindow() {
+            if (anim != null) anim.cancel();
+            super.onDetachedFromWindow();
+        }
+
+        @Override protected void onDraw(Canvas c) {
+            if (bw <= 0 || bh <= 0) return;
+            float pad = S(8), disp_w = getWidth() - 2 * pad, disp_h = getHeight() - 2 * pad;
+            float esc = Math.min(disp_w / bw, disp_h / bh);
+            float w = bw * esc, h = bh * esc;
+            float graus = S(10);
+            r.set((getWidth() - w) / 2 + graus / 2, (getHeight() - h) / 2 + graus / 2, (getWidth() + w) / 2 - graus / 2, (getHeight() + h) / 2 - graus / 2);
+            float cx = getWidth() / 2f, cy = getHeight() / 2f;
+            if (grad == null) {
+                grad = new android.graphics.SweepGradient(cx, cy,
+                        new int[] { 0x004CC2FF, 0xFF4CC2FF, 0xFF8B5CF6, 0xFFF45AAA, 0xFFFFB040 }, new float[] { 0f, 0.25f, 0.55f, 0.8f, 1f });
+            }
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(graus);
+            p.setShader(grad);
+            c.save();
+            c.rotate(fase, cx, cy);
+            c.drawRoundRect(r, S(2), S(2), p);
+            c.restore();
+            p.setShader(null);
+        }
+    }
 }

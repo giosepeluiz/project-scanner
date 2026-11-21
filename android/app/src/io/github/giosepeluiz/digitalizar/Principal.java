@@ -41,6 +41,8 @@ public class Principal extends Activity {
     TextView txtPasta, status, btnDigitalizar, btnSalvar, btnRede, btnCamera, placeholder;
     LinearLayout painel, cardScanner, acoes;
     ImageView previa;
+    Ui.Interruptor swOtimizar;
+    Ui.BordaOtimizar borda;
     ProgressBar progresso;
     View btnDetectar;
     boolean ocupado, acrescentar, paginaCamera;
@@ -177,6 +179,8 @@ public class Principal extends Activity {
         placeholder = Ui.rotulo(this, L.T("A pré-visualização aparece aqui\ndepois de digitalizar."), 14, Tema.TXT2, false);
         placeholder.setGravity(Gravity.CENTER);
         cartao.addView(placeholder, new FrameLayout.LayoutParams(MP, MP));
+        borda = new Ui.BordaOtimizar(this);
+        cartao.addView(borda, new FrameLayout.LayoutParams(MP, MP));
         int alt = (int) (getResources().getDisplayMetrics().heightPixels * 0.5);
         corpo.addView(cartao, Ui.lpM(MP, alt, 0, 0, 0, 10));
         previa.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { if (Sessao.imagem != null) abrirEditor(); } });
@@ -238,6 +242,9 @@ public class Principal extends Activity {
         ls.leftMargin = S(8);
         botoes.addView(btnSalvar, ls);
         rodape.addView(botoes, Ui.lp(MP, WC));
+        swOtimizar = new Ui.Interruptor(this, L.T("Otimizar"), Prefs.logico("otimizar", true));
+        swOtimizar.aoMudar = new Runnable() { public void run() { Prefs.definir("otimizar", swOtimizar.ligado()); } };
+        rodape.addView(swOtimizar, Ui.lpM(MP, WC, 0, 6, 0, 0));
         raiz.addView(rodape, Ui.lp(MP, WC));
 
         setContentView(raiz);
@@ -346,6 +353,7 @@ public class Principal extends Activity {
     }
 
     void atualizarPrevia() {
+        borda.parar();
         if (Sessao.imagem != null) {
             Bitmap p = Imagens.reduzir(Sessao.imagem, 1600);
             previa.setImageBitmap(p);
@@ -573,8 +581,31 @@ public class Principal extends Activity {
         return m == null ? e.getClass().getSimpleName() : m;
     }
 
+    /** Otimiza a página (bordas pretas, inclinação, orientação) com a borda em degradê girando na pré-visualização.
+     *  Qualquer falha devolve a imagem original sem mudar nada. */
+    Bitmap otimizando(Bitmap b) {
+        long ini = System.currentTimeMillis();
+        try {
+            final Bitmap mini = Imagens.reduzir(b, 1400);
+            ui.post(new Runnable() {
+                public void run() {
+                    status.setText(L.T("Otimizando…"));
+                    previa.setImageBitmap(mini);
+                    placeholder.setVisibility(View.GONE);
+                    borda.iniciar(mini.getWidth(), mini.getHeight());
+                }
+            });
+            Bitmap nova = Otimizar.processar(b);
+            long falta = 1100 - (System.currentTimeMillis() - ini);
+            if (falta > 0) Thread.sleep(falta);      // deixa a animação aparecer, mesmo quando é rápido
+            if (nova != null) { b.recycle(); return nova; }
+        } catch (Throwable e) { /* segue com a imagem original */ }
+        return b;
+    }
+
     /** Põe a imagem digitalizada no documento em aberto (nada é salvo até tocar em Salvar). */
     void receber(Bitmap b, boolean cor, boolean realce, int dpi, boolean comoPagina) {
+        if (swOtimizar.ligado()) b = otimizando(b);
         final boolean pagina = comoPagina && Sessao.doc != null;
         try {
             final Documento d;

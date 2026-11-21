@@ -847,4 +847,94 @@ namespace Digitalizar
 
         protected override void OnResize(EventArgs e) { base.OnResize(e); Limitar(); }
     }
+
+    // ---------------------------------------------------------------- pré-visualização com a borda em degradê girando (otimização em andamento)
+    class PreviaImagem : PictureBox
+    {
+        readonly Timer relogio = new Timer { Interval = 30 };
+        double fase;
+        bool animando;
+
+        public PreviaImagem()
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            relogio.Tick += (s, e) => { fase = (fase + 0.012) % 1.0; Invalidate(); };
+        }
+
+        public bool Animando
+        {
+            get { return animando; }
+            set
+            {
+                if (value == animando) return;
+                animando = value;
+                if (value) relogio.Start(); else relogio.Stop();
+                Invalidate();
+            }
+        }
+
+        static readonly Color[] Paleta =
+        {
+            Color.FromArgb(76, 194, 255), Color.FromArgb(139, 92, 246), Color.FromArgb(244, 90, 170), Color.FromArgb(255, 176, 64), Color.FromArgb(76, 194, 255)
+        };
+
+        static Color Gradiente(double t)
+        {
+            t = t - Math.Floor(t);
+            double p = t * (Paleta.Length - 1);
+            int i = Math.Min(Paleta.Length - 2, (int)p);
+            double f = p - i;
+            Color a = Paleta[i], b = Paleta[i + 1];
+            return Color.FromArgb((int)(a.R + (b.R - a.R) * f), (int)(a.G + (b.G - a.G) * f), (int)(a.B + (b.B - a.B) * f));
+        }
+
+        /// Retângulo em que a imagem aparece (modo Zoom)
+        Rectangle AreaImagem()
+        {
+            if (Image == null) return ClientRectangle;
+            double r = Math.Min((double)ClientSize.Width / Image.Width, (double)ClientSize.Height / Image.Height);
+            int w = Math.Max(1, (int)(Image.Width * r)), h = Math.Max(1, (int)(Image.Height * r));
+            return new Rectangle((ClientSize.Width - w) / 2, (ClientSize.Height - h) / 2, w, h);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            if (!animando || Image == null) return;
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle ri = AreaImagem();
+            float grossura = Tema.S(12);
+            var r = new RectangleF(ri.X + grossura / 2f, ri.Y + grossura / 2f, ri.Width - grossura, ri.Height - grossura);
+            if (r.Width < 10 || r.Height < 10) return;
+            // percurso do retângulo em 240 trechos; a "cabeça" do degradê gira e a cauda vai sumindo
+            int N = 360;
+            double per = 2 * (r.Width + r.Height);
+            Func<double, PointF> Ponto = d =>
+            {
+                d = d % per; if (d < 0) d += per;
+                if (d < r.Width) return new PointF((float)(r.Left + d), r.Top);
+                d -= r.Width; if (d < r.Height) return new PointF(r.Right, (float)(r.Top + d));
+                d -= r.Height; if (d < r.Width) return new PointF((float)(r.Right - d), r.Bottom);
+                d -= r.Width; return new PointF(r.Left, (float)(r.Bottom - d));
+            };
+            Color fundo = BackColor;
+            for (int i = 0; i < N; i++)
+            {
+                double t0 = (double)i / N;
+                double cauda = 1.0 - ((t0 - fase) % 1.0 + 1.0) % 1.0;           // 1 na cabeça, 0 no fim da cauda
+                double k = 0.30 + 0.70 * Math.Pow(cauda, 1.6);                   // opaco: a cauda se mistura com o fundo
+                Color c = Gradiente(t0 + fase);
+                Color cor = Color.FromArgb((int)(fundo.R + (c.R - fundo.R) * k), (int)(fundo.G + (c.G - fundo.G) * k), (int)(fundo.B + (c.B - fundo.B) * k));
+                using (var pen = new Pen(cor, grossura) { StartCap = LineCap.Flat, EndCap = LineCap.Flat })
+                    g.DrawLine(pen, Ponto(t0 * per), Ponto((t0 + 1.6 / N) * per));
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) relogio.Dispose();
+            base.Dispose(disposing);
+        }
+    }
 }

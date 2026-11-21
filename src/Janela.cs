@@ -15,8 +15,8 @@ using System.Windows.Forms;
 [assembly: AssemblyDescription("Digitalização com edição rápida")]
 [assembly: AssemblyCompany("Giosepe Luiz dos Santos")]
 [assembly: AssemblyCopyright("© 2026 Giosepe Luiz dos Santos")]
-[assembly: AssemblyVersion("3.4.0.0")]
-[assembly: AssemblyFileVersion("3.4.0.0")]
+[assembly: AssemblyVersion("3.5.0.0")]
+[assembly: AssemblyFileVersion("3.5.0.0")]
 
 namespace Digitalizar
 {
@@ -31,7 +31,9 @@ namespace Digitalizar
         BotaoIcone btnMenu, btnOpcoes, btnScanCompacto;
         BarraProgresso barra;
         Label lblStatus;
-        PictureBox preview;
+        PreviaImagem preview;
+        Interruptor swOtimizar;
+        Bitmap previaTmp;
         Label lblVazio;
         Panel esquerda, conteudo, compacto;
 
@@ -132,6 +134,11 @@ namespace Digitalizar
             };
             selDpi.Alterado += (s, e) => Prefs.Definir("dpi", selDpi.Valor);
 
+            swOtimizar = new Interruptor(L.T("Otimizar")) { Left = S(16), Top = y, Ligado = Prefs.ObterBool("otimizar", true) };
+            swOtimizar.Alterado += (s, e) => Prefs.Definir("otimizar", swOtimizar.Ligado ? "1" : "0");
+            conteudo.Controls.Add(swOtimizar);
+            y += swOtimizar.Height + S(8);
+
             selPasta = new Seletor
             {
                 Titulo = L.T("Salvar arquivo em"), Seta = false, CorDestaque = true, LinkTexto = L.T("Padrão"),
@@ -192,7 +199,7 @@ namespace Digitalizar
             btnAbrir.Click += (s, e) => Abrir();
             btnPasta.Click += (s, e) => AbrirPasta();
 
-            preview = new PictureBox { Dock = DockStyle.Fill, SizeMode = PictureBoxSizeMode.Zoom, BackColor = Tema.PREV, Visible = false };
+            preview = new PreviaImagem { Dock = DockStyle.Fill, SizeMode = PictureBoxSizeMode.Zoom, BackColor = Tema.PREV, Visible = false };
             preview.DoubleClick += (s, e) => Editar();
             lblVazio = new Label
             {
@@ -357,6 +364,7 @@ namespace Digitalizar
             int dpi = int.Parse(selDpi.Valor);
             string tipo = selTipo.Valor;
             string destino = pasta;
+            bool otimizar = swOtimizar.Ligado;
             var tam = Config.Tamanhos[Math.Max(0, selTamanho.Indice)];
             if (tipo != "PDF" && !ResolverPendente()) return;      // o PDF aberto vai ser substituído
 
@@ -373,6 +381,7 @@ namespace Digitalizar
                 try
                 {
                     Bitmap img = Wia.Digitalizar(sc.Id, "Cor", dpi, tam.L, tam.A);
+                    if (otimizar) img = Otimizando(img);
                     var pag = new Pagina(img, dpi, modo);
                     BeginInvoke((Action)(() => PaginaPronta(pag, tipo, destino)));
                 }
@@ -384,11 +393,40 @@ namespace Digitalizar
             });
         }
 
+        /// Otimiza a página (bordas pretas, inclinação, orientação) com a borda em degradê girando na pré-visualização.
+        /// Roda no segundo plano; qualquer falha devolve a imagem original sem mudar nada.
+        Bitmap Otimizando(Bitmap img)
+        {
+            var ini = DateTime.UtcNow;
+            try
+            {
+                Bitmap mini = Imagens.Reduzir(img, 1400);
+                BeginInvoke((Action)(() =>
+                {
+                    lblStatus.Text = L.T("Otimizando…");
+                    if (previaTmp != null) previaTmp.Dispose();
+                    previaTmp = mini;
+                    preview.Image = mini;
+                    preview.Visible = true;
+                    lblVazio.Visible = false;
+                    preview.Animando = true;
+                }));
+                Bitmap nova = Otimizar.Processar(img);
+                int falta = 1100 - (int)(DateTime.UtcNow - ini).TotalMilliseconds;
+                if (falta > 0) Thread.Sleep(falta);       // deixa a animação aparecer, mesmo quando é rápido
+                if (nova != null) { img.Dispose(); return nova; }
+            }
+            catch (Exception) { }
+            return img;
+        }
+
         /// A digitalização terminou: entra no documento (nova página do PDF aberto, ou documento novo) e é salva
         void PaginaPronta(Pagina pag, string tipo, string destino)
         {
             Ocupado(false, null);
+            preview.Animando = false;
             preview.Image = null;
+            if (previaTmp != null) { previaTmp.Dispose(); previaTmp = null; }
             bool somar = tipo == "PDF" && doc != null && doc.EhPdf;
             if (!somar)
             {
@@ -520,6 +558,7 @@ namespace Digitalizar
 
         void Falhou(string msg)
         {
+            preview.Animando = false;
             Ocupado(false, L.T("Falhou:") + " " + msg);
             MessageBox.Show(this, msg, "Digitalizar", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

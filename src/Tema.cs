@@ -54,6 +54,12 @@ namespace Digitalizar
             return valores.TryGetValue(chave, out v) && v.Length > 0 ? v : padrao;
         }
 
+        public static bool ObterBool(string chave, bool padrao)
+        {
+            string v = Obter(chave, padrao ? "1" : "0");
+            return v == "1" || v == "true";
+        }
+
         public static int ObterInt(string chave, int padrao)
         {
             int v;

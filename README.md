@@ -179,7 +179,7 @@ Quer mais detalhes? Veja o **[Manual completo](docs/MANUAL.md)**.
 ## 🕰️ Histórico de versões
 
 ### 🚀 Versão 3.x: "Cara nova" + "Muito prazer!" + "Fala a sua língua" + "Sempre atualizado"
-**Releases: [v3.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.4.0) (mais recente) · [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
+**Releases: [v3.5.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.5.0) (mais recente) · [v3.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.4.0) · [v3.3.1](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.1) · [v3.3.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.3.0) · [v3.2.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.2.0) · [v3.1.0](https://github.com/giosepeluiz/project-scanner/releases/tag/v3.1.0)** · 🪟 Windows + 🐧 Linux
 
 A maior atualização até agora. O programa passou a parecer (e se comportar como) um app nativo do Windows 11, e ainda ganhou uma versão para Linux.
 
@@ -202,6 +202,10 @@ A maior atualização até agora. O programa passou a parecer (e se comportar co
 - **15 idiomas.** O programa abre no idioma do sistema (ou em inglês, se o idioma do sistema não estiver na lista), e dá para trocar nas Opções. Os principais ficam no topo: Português (Brasil), Português (Portugal), English (US), English (UK) e Español. Depois vêm Deutsch, Français, Italiano, Nederlands, Polski, Русский, Türkçe, Українська, 日本語 e 中文 (simplificado).
 - **O programa lembra de tudo:** idioma, tema, cor, scanner, tamanho, tipo, modo de cor, resolução, pasta, painel recolhido ou expandido, tamanho e posição da janela (inclusive maximizada) e o valor do Recorte rápido.
 - Nas Opções, o tema "do sistema" aparece com o nome certo no Linux.
+
+**O que a 3.5 acrescentou:** ✨
+- **Otimizar** (ligado por padrão): ao digitalizar, o programa tira as bordas pretas, endireita a página, corrige a inclinação do texto e acerta a orientação (0/90/180/270°), mostrando uma borda em degradê girando enquanto trabalha. Roda no computador, sem internet e **sem IA**; quando não há certeza da orientação, não gira. Dá para desligar no interruptor acima de "Salvar arquivo em".
+- 📱 No Android, a **1.5.0** traz o mesmo, logo abaixo do botão Digitalizar.
 
 **O que a 3.4 acrescentou:** 🖼️
 - **JPEG XL sem perdas**, a máxima qualidade, como tipo padrão na primeira vez que o programa é aberto. O arquivo `.jxl` guarda a imagem idêntica à digitalizada, é bem menor que PNG e maior que um JPEG comum. Para abrir no Windows é preciso a extensão *JPEG XL Image Extension* (Microsoft Store) ou um visualizador como o IrfanView.
@@ -275,6 +279,7 @@ mcs -target:winexe -out:Digitalizar.exe -win32icon:Digitalizar.ico \
 | `src/Documento.cs` | Documento digitalizado: páginas, modo de cor e salvamento |
 | `src/Atualizador.cs` | Verificação e instalação de novas versões pelo GitHub |
 | `src/Editor.cs` | Edição rápida (recorte, rotação, tons) |
+| `src/Otimizar.cs` | Otimização da página (bordas pretas, inclinação, orientação), sem IA |
 | `src/JpegXl.cs` | Codificador JPEG XL sem perdas (sem DLL) |
 | `src/Comum.cs` | Scanner (WIA no Windows, SANE no Linux), processamento de imagem e gerador de PDF |
 | `src/Controles.cs` | Controles próprios: seletores, botões, sliders, switch, editor de curvas |

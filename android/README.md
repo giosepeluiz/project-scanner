@@ -6,7 +6,7 @@
 
 ### O mesmo Digitalizar do Windows e do Linux, agora no celular, e com câmera inteligente.
 
-![Versão](https://img.shields.io/badge/versão-1.4.0-4cc2ff?style=for-the-badge)
+![Versão](https://img.shields.io/badge/versão-1.5.0-4cc2ff?style=for-the-badge)
 ![Android](https://img.shields.io/badge/Android-10%2B-3ddc84?style=for-the-badge&logo=android&logoColor=white)
 ![Licença MIT](https://img.shields.io/badge/licença-MIT-6ccb5f?style=for-the-badge)
 
@@ -22,7 +22,7 @@ O Android segue a numeração do Digitalizar de PC com uma diferença de duas "c
 
 | | 🖥️ PC (Windows / Linux) | 📱 Android |
 |---|---|---|
-| **Versão** | 3.4.0 | **1.4.0** |
+| **Versão** | 3.5.0 | **1.5.0** |
 | **Linguagem** | C# (Windows Forms) | Java puro, sem AndroidX e sem Gradle |
 | **Origem da digitalização** | Scanner USB ou de rede (WIA no Windows, SANE no Linux) | **Scanner de rede** (eSCL / AirScan / Mopria) **ou câmera do celular** |
 | **Câmera inteligente** | Não tem | **Sim**: detecta a folha, endireita, tira sombras e vira um scan |
@@ -105,7 +105,7 @@ O app é escrito em **Java** usando só a API do Android (sem AndroidX, sem Grad
 
 ```bash
 tools/preparar.sh      # baixa aapt2, dx, android.jar e apksigner para /opt/asdk (uma vez só)
-./build.sh             # gera build/Digitalizar-1.4.0-android.apk
+./build.sh             # gera build/Digitalizar-1.5.0-android.apk
 teste/testar.sh        # testa a deteção do documento no computador, com fotos sintéticas
 ```
 
@@ -119,12 +119,18 @@ O `build.sh` assina com `keystore/digitalizar.jks` (senha na variável `KS_PASS`
 | `Revisao.java` | Ajuste dos cantos com lupa, filtro e "transformar em scan" |
 | `Visao.java` | A inteligência: deteção, refino dos cantos, perspectiva e realce |
 | `Editor.java` | Edição rápida |
+| `Otimizar.java` | Otimização da página (bordas pretas, inclinação, orientação), sem IA |
 | `Jxl.java` | Codificador JPEG XL sem perdas |
 | `Imagens.java` | Processamento, JPEG XL/JPEG/PNG/PDF e pastas de destino |
 | `Ui.java` · `Tema.java` · `L.java` | Controles, temas/cores e idiomas |
 | `Opcoes.java` · `Sobre.java` · `Provedor.java` | Opções, Sobre e a partilha de arquivos com outros apps |
 
 ## 🕰️ Histórico de versões
+
+### ✨ Versão 1.5: "Otimizar"
+**Release: [android-v1.5.0](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.5.0)** · acompanha as funções da 3.5 do PC
+
+- **Otimizar** (ligado por padrão, logo abaixo do botão Digitalizar): tira as bordas pretas, endireita a página, corrige a inclinação do texto e acerta a orientação (0/90/180/270°), com uma borda em degradê girando enquanto trabalha. Roda no aparelho, sem internet e sem IA; sem certeza da orientação, não gira.
 
 ### 🖼️ Versão 1.4: "JPEG XL"
 **Release: [android-v1.4.0](https://github.com/giosepeluiz/project-scanner/releases/tag/android-v1.4.0)** · acompanha as funções da 3.4 do PC

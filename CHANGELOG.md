@@ -7,6 +7,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ---
 
+## [3.5.0] – 2026-11-21 · Otimizar a página automaticamente ✨
+
+### Adicionado
+- **Otimizar**, um interruptor logo acima de "Salvar arquivo em", **ligado por padrão**. Depois de digitalizar, o programa arruma a página sozinho, mostrando uma **borda grossa em degradê girando** em volta da imagem enquanto trabalha:
+  - **Tira as bordas pretas** da tampa do scanner e **endireita** a página inclinada (acha o retângulo da folha e recorta).
+  - Sem borda preta, **corrige a inclinação do texto** (até 7°).
+  - **Acerta a orientação** (0, 90, 180 ou 270°) pela análise das linhas de texto. Se não houver certeza, **não gira**.
+- Tudo roda no próprio computador, **sem internet, sem chave e sem inteligência artificial**: são algoritmos de visão computacional. A orientação de 180° depende de o texto ter letras minúsculas em quantidade; folhas só com maiúsculas, números ou desenhos podem não ser giradas (use ↺/↻ 90° na edição rápida).
+- A página otimizada vira o original colorido do documento, então a troca de modo de cor e a edição rápida continuam funcionando como antes. Desligue o interruptor para receber a imagem exatamente como veio do scanner.
+
+---
+
 ## [3.4.0] – 2026-11-19 · JPEG XL e giro de 1 em 1° 🖼️
 
 ### Adicionado

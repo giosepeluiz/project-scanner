@@ -3,6 +3,16 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 A numeração do Android acompanha a do PC com duas "casas" de diferença: **1.3** do Android corresponde às funções da **3.3** do PC. O histórico do PC está no [CHANGELOG da raiz](../CHANGELOG.md).
 
+## [1.5.0] – 2026-11-21 · Otimizar a página automaticamente ✨
+
+Acompanha as funções da **3.5** do PC.
+
+### Adicionado
+- **Otimizar**, um interruptor logo abaixo do botão **Digitalizar**, **ligado por padrão**. Depois de digitalizar (scanner ou câmera), o app tira as **bordas pretas**, **endireita** a página, corrige a **inclinação do texto** e acerta a **orientação** (0, 90, 180 ou 270°), com uma **borda grossa em degradê girando** em volta da imagem enquanto trabalha. Se não houver certeza da orientação, não gira.
+- Tudo roda no aparelho, **sem internet e sem IA**, e dá as mesmas decisões da versão do PC. Páginas acima de 30 megapixels não são otimizadas (memória). Desligue o interruptor para manter a imagem como veio.
+
+---
+
 ## [1.4.0] – 2026-11-19 · JPEG XL e giro de 1 em 1° 🖼️
 
 Acompanha as funções da **3.4** do PC.
